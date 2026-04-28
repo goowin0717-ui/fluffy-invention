@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>電卓</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: 'Segoe UI', sans-serif;
+        }
+
+        .calculator {
+            background: #1e1e2e;
+            border-radius: 20px;
+            padding: 20px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.4);
+            width: 320px;
+        }
+
+        .display {
+            background: #2d2d44;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 15px;
+            text-align: right;
+            min-height: 90px;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+        }
+
+        .display-history {
+            color: #888;
+            font-size: 14px;
+            min-height: 20px;
+            word-break: break-all;
+        }
+
+        .display-result {
+            color: #fff;
+            font-size: 36px;
+            font-weight: 600;
+            word-break: break-all;
+            overflow-wrap: break-word;
+        }
+
+        .buttons {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+        }
+
+        button {
+            border: none;
+            border-radius: 12px;
+            padding: 20px;
+            font-size: 20px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            outline: none;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+        }
+
+        button:active {
+            transform: translateY(1px);
+        }
+
+        .btn-number {
+            background: #3d3d5c;
+            color: #fff;
+        }
+
+        .btn-number:hover {
+            background: #4d4d6c;
+        }
+
+        .btn-operator {
+            background: #ff9500;
+            color: #fff;
+        }
+
+        .btn-operator:hover {
+            background: #ffb143;
+        }
+
+        .btn-function {
+            background: #a5a5a5;
+            color: #1e1e2e;
+        }
+
+        .btn-function:hover {
+            background: #c5c5c5;
+        }
+
+        .btn-equal {
+            background: #34c759;
+            color: #fff;
+            grid-column: span 2;
+        }
+
+        .btn-equal:hover {
+            background: #30d158;
+        }
+
+        .btn-zero {
+            grid-column: span 2;
+        }
+    </style>
+</head>
+<body>
+    <div class="calculator">
+        <div class="display">
+            <div class="display-history" id="history"></div>
+            <div class="display-result" id="result">0</div>
+        </div>
+        <div class="buttons">
+            <button class="btn-function" onclick="clearAll()">AC</button>
+            <button class="btn-function" onclick="clearEntry()">C</button>
+            <button class="btn-function" onclick="toggleSign()">±</button>
+            <button class="btn-operator" onclick="setOperator('/')">÷</button>
+
+            <button class="btn-number" onclick="appendNumber('7')">7</button>
+            <button class="btn-number" onclick="appendNumber('8')">8</button>
+            <button class="btn-number" onclick="appendNumber('9')">9</button>
+            <button class="btn-operator" onclick="setOperator('*')">×</button>
+
+            <button class="btn-number" onclick="appendNumber('4')">4</button>
+            <button class="btn-number" onclick="appendNumber('5')">5</button>
+            <button class="btn-number" onclick="appendNumber('6')">6</button>
+            <button class="btn-operator" onclick="setOperator('-')">−</button>
+
+            <button class="btn-number" onclick="appendNumber('1')">1</button>
+            <button class="btn-number" onclick="appendNumber('2')">2</button>
+            <button class="btn-number" onclick="appendNumber('3')">3</button>
+            <button class="btn-operator" onclick="setOperator('+')">+</button>
+
+            <button class="btn-number btn-zero" onclick="appendNumber('0')">0</button>
+            <button class="btn-number" onclick="appendDecimal()">.</button>
+            <button class="btn-equal" onclick="calculate()">=</button>
+        </div>
+    </div>
+
+    <script>
+        let currentValue = '0';
+        let previousValue = null;
+        let operator = null;
+        let shouldResetDisplay = false;
+
+        const resultDisplay = document.getElementById('result');
+        const historyDisplay = document.getElementById('history');
+
+        function updateDisplay() {
+            resultDisplay.textContent = currentValue;
+        }
+
+        function updateHistory() {
+            if (previousValue !== null && operator !== null) {
+                const opSymbol = { '+': '+', '-': '−', '*': '×', '/': '÷' };
+                historyDisplay.textContent = previousValue + ' ' + opSymbol[operator];
+            } else {
+                historyDisplay.textContent = '';
+            }
+        }
+
+        function appendNumber(num) {
+            if (shouldResetDisplay) {
+                currentValue = num;
+                shouldResetDisplay = false;
+            } else {
+                if (currentValue === '0') {
+                    currentValue = num;
+                } else {
+                    currentValue += num;
+                }
+            }
+            updateDisplay();
+        }
+
+        function appendDecimal() {
+            if (shouldResetDisplay) {
+                currentValue = '0.';
+                shouldResetDisplay = false;
+            } else if (!currentValue.includes('.')) {
+                currentValue += '.';
+            }
+            updateDisplay();
+        }
+
+        function setOperator(op) {
+            if (operator !== null && !shouldResetDisplay) {
+                calculate();
+            }
+            previousValue = parseFloat(currentValue);
+            operator = op;
+            shouldResetDisplay = true;
+            updateHistory();
+        }
+
+        function calculate() {
+            if (operator === null || previousValue === null) return;
+
+            const current = parseFloat(currentValue);
+            let result;
+
+            switch (operator) {
+                case '+':
+                    result = previousValue + current;
+                    break;
+                case '-':
+                    result = previousValue - current;
+                    break;
+                case '*':
+                    result = previousValue * current;
+                    break;
+                case '/':
+                    if (current === 0) {
+                        currentValue = 'エラー';
+                        updateDisplay();
+                        previousValue = null;
+                        operator = null;
+                        shouldResetDisplay = true;
+                        historyDisplay.textContent = '';
+                        return;
+                    }
+                    result = previousValue / current;
+                    break;
+            }
+
+            result = Math.round(result * 1000000000) / 1000000000;
+            currentValue = result.toString();
+            previousValue = null;
+            operator = null;
+            shouldResetDisplay = true;
+            updateDisplay();
+            historyDisplay.textContent = '';
+        }
+
+        function clearAll() {
+            currentValue = '0';
+            previousValue = null;
+            operator = null;
+            shouldResetDisplay = false;
+            updateDisplay();
+            historyDisplay.textContent = '';
+        }
+
+        function clearEntry() {
+            currentValue = '0';
+            updateDisplay();
+        }
+
+        function toggleSign() {
+            if (currentValue !== '0' && currentValue !== 'エラー') {
+                currentValue = (parseFloat(currentValue) * -1).toString();
+                updateDisplay();
+            }
+        }
+    </script>
+</body>
+</html>

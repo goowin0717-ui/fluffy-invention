@@ -1,0 +1,710 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>メモ帳アプリ</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/noto-sans-jp@5.0.17/400.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/noto-sans-jp@5.0.17/500.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/noto-sans-jp@5.0.17/700.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            min-height: 100vh;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: 'Noto Sans JP', sans-serif;
+            padding: 40px 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 32px;
+        }
+
+        .header h1 {
+            color: #ffffff;
+            font-size: 32px;
+            font-weight: 700;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+            margin-bottom: 8px;
+        }
+
+        .header p {
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 14px;
+        }
+
+        .toolbar {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+
+        .search-box {
+            flex: 1;
+            position: relative;
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 14px 18px 14px 44px;
+            border: none;
+            border-radius: 16px;
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+            color: #fff;
+            font-size: 15px;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+
+        .search-box input::placeholder {
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .search-box input:focus {
+            background: rgba(255, 255, 255, 0.25);
+            box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.2);
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .btn-add {
+            padding: 14px 28px;
+            border: none;
+            border-radius: 16px;
+            background: #ffffff;
+            color: #764ba2;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            white-space: nowrap;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+        }
+
+        .btn-add:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn-add:active {
+            transform: translateY(0);
+        }
+
+        .memo-count {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 13px;
+            margin-bottom: 16px;
+            padding-left: 4px;
+        }
+
+        .memos-grid {
+            display: grid;
+            gap: 16px;
+        }
+
+        .memo-card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 24px;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+            transition: all 0.3s ease;
+            animation: fadeIn 0.4s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .memo-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.18);
+        }
+
+        .memo-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+        }
+
+        .memo-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 12px;
+        }
+
+        .memo-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #333;
+            word-break: break-word;
+        }
+
+        .memo-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn-icon {
+            width: 32px;
+            height: 32px;
+            border: none;
+            border-radius: 8px;
+            background: transparent;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+            color: #666;
+        }
+
+        .btn-icon:hover {
+            background: #f0f0f0;
+        }
+
+        .btn-icon.delete:hover {
+            background: #fee2e2;
+            color: #ef4444;
+        }
+
+        .btn-icon.edit:hover {
+            background: #dbeafe;
+            color: #3b82f6;
+        }
+
+        .memo-content {
+            color: #555;
+            font-size: 14px;
+            line-height: 1.7;
+            white-space: pre-wrap;
+            word-break: break-word;
+            margin-bottom: 16px;
+        }
+
+        .memo-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-top: 12px;
+            border-top: 1px solid #f0f0f0;
+        }
+
+        .memo-date {
+            font-size: 12px;
+            color: #999;
+        }
+
+        .memo-tag {
+            font-size: 11px;
+            padding: 4px 10px;
+            background: linear-gradient(135deg, #667eea20, #764ba220);
+            color: #764ba2;
+            border-radius: 20px;
+            font-weight: 500;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .empty-state svg {
+            width: 80px;
+            height: 80px;
+            margin-bottom: 20px;
+            opacity: 0.6;
+        }
+
+        .empty-state p {
+            font-size: 16px;
+        }
+
+        /* Modal */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(4px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            z-index: 100;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal {
+            background: #fff;
+            border-radius: 24px;
+            width: 100%;
+            max-width: 500px;
+            padding: 32px;
+            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.3);
+            animation: slideUp 0.3s ease;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(40px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+
+        .modal-title {
+            font-size: 22px;
+            font-weight: 700;
+            color: #333;
+        }
+
+        .btn-close {
+            width: 36px;
+            height: 36px;
+            border: none;
+            border-radius: 50%;
+            background: #f5f5f5;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+            color: #666;
+        }
+
+        .btn-close:hover {
+            background: #e5e5e5;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            color: #555;
+            margin-bottom: 8px;
+        }
+
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: 14px 16px;
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            font-size: 15px;
+            font-family: inherit;
+            outline: none;
+            transition: all 0.2s ease;
+            color: #333;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus {
+            border-color: #764ba2;
+            box-shadow: 0 0 0 3px rgba(118, 75, 162, 0.15);
+        }
+
+        .form-group textarea {
+            min-height: 150px;
+            resize: vertical;
+        }
+
+        .form-group input::placeholder,
+        .form-group textarea::placeholder {
+            color: #bbb;
+        }
+
+        .modal-footer {
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+            margin-top: 24px;
+        }
+
+        .btn-cancel {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 12px;
+            background: #f5f5f5;
+            color: #555;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn-cancel:hover {
+            background: #e5e5e5;
+        }
+
+        .btn-save {
+            padding: 12px 28px;
+            border: none;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: #fff;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 15px rgba(118, 75, 162, 0.3);
+        }
+
+        .btn-save:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(118, 75, 162, 0.4);
+        }
+
+        /* Confirm Modal */
+        .confirm-modal {
+            text-align: center;
+        }
+
+        .confirm-modal p {
+            color: #666;
+            font-size: 15px;
+            margin-bottom: 8px;
+        }
+
+        .confirm-modal .memo-title-preview {
+            font-weight: 600;
+            color: #333;
+        }
+
+        @media (max-width: 600px) {
+            body {
+                padding: 20px 12px;
+            }
+            .toolbar {
+                flex-direction: column;
+            }
+            .btn-add {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📝 メモ帳</h1>
+            <p>大切な思い出やアイデアを記録しましょう</p>
+        </div>
+
+        <div class="toolbar">
+            <div class="search-box">
+                <svg class="search-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="11" cy="11" r="8"></circle>
+                    <path d="m21 21-4.3-4.3"></path>
+                </svg>
+                <input type="text" id="searchInput" placeholder="メモを検索..." oninput="filterMemos()">
+            </div>
+            <button class="btn-add" onclick="openModal()">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -2px; margin-right: 6px;">
+                    <path d="M12 5v14M5 12h14"/>
+                </svg>
+                新規メモ
+            </button>
+        </div>
+
+        <div class="memo-count" id="memoCount"></div>
+
+        <div class="memos-grid" id="memosGrid"></div>
+    </div>
+
+    <!-- Create/Edit Modal -->
+    <div class="modal-overlay" id="modalOverlay" onclick="closeModalOutside(event)">
+        <div class="modal">
+            <div class="modal-header">
+                <h2 class="modal-title" id="modalTitle">新規メモ</h2>
+                <button class="btn-close" onclick="closeModal()">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M18 6 6 18M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+            <div class="form-group">
+                <label for="titleInput">タイトル</label>
+                <input type="text" id="titleInput" placeholder="メモのタイトルを入力" maxlength="50">
+            </div>
+            <div class="form-group">
+                <label for="contentInput">内容</label>
+                <textarea id="contentInput" placeholder="メモの内容を入力..."></textarea>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-cancel" onclick="closeModal()">キャンセル</button>
+                <button class="btn-save" onclick="saveMemo()">保存</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Delete Confirm Modal -->
+    <div class="modal-overlay" id="confirmOverlay" onclick="closeConfirmOutside(event)">
+        <div class="modal confirm-modal">
+            <div class="modal-header" style="justify-content: center;">
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M3 6h18M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/>
+                    <line x1="10" y1="11" x2="10" y2="17"/>
+                    <line x1="14" y1="11" x2="14" y2="17"/>
+                </svg>
+            </div>
+            <h2 class="modal-title" style="margin-bottom: 12px;">削除しますか？</h2>
+            <p>以下のメモを削除します：</p>
+            <p class="memo-title-preview" id="deletePreview"></p>
+            <div class="modal-footer" style="justify-content: center; margin-top: 28px;">
+                <button class="btn-cancel" onclick="closeConfirm()">キャンセル</button>
+                <button class="btn-save" onclick="confirmDelete()" style="background: linear-gradient(135deg, #ef4444, #dc2626); box-shadow: 0 4px 15px rgba(239, 68, 68, 0.3);">削除</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let memos = JSON.parse(localStorage.getItem('memos')) || [];
+        let editingId = null;
+        let deletingId = null;
+
+        function generateId() {
+            return Date.now().toString(36) + Math.random().toString(36).slice(2);
+        }
+
+        function formatDate(dateStr) {
+            const date = new Date(dateStr);
+            const year = date.getFullYear();
+            const month = (date.getMonth() + 1).toString().padStart(2, '0');
+            const day = date.getDate().toString().padStart(2, '0');
+            const hours = date.getHours().toString().padStart(2, '0');
+            const minutes = date.getMinutes().toString().padStart(2, '0');
+            return `${year}年${month}月${day}日 ${hours}:${minutes}`;
+        }
+
+        function saveToStorage() {
+            localStorage.setItem('memos', JSON.stringify(memos));
+        }
+
+        function renderMemos(filterText = '') {
+            const grid = document.getElementById('memosGrid');
+            const countEl = document.getElementById('memoCount');
+
+            let filteredMemos = memos;
+            if (filterText) {
+                const lowerFilter = filterText.toLowerCase();
+                filteredMemos = memos.filter(m =>
+                    m.title.toLowerCase().includes(lowerFilter) ||
+                    m.content.toLowerCase().includes(lowerFilter)
+                );
+            }
+
+            const sortedMemos = [...filteredMemos].sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt));
+
+            countEl.textContent = `${memos.length}件中 ${filteredMemos.length}件を表示`;
+
+            if (sortedMemos.length === 0) {
+                grid.innerHTML = `
+                    <div class="empty-state">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/>
+                            <polyline points="14,2 14,8 20,8"/>
+                            <line x1="16" y1="13" x2="8" y2="13"/>
+                            <line x1="16" y1="17" x2="8" y2="17"/>
+                            <line x1="10" y1="9" x2="8" y2="9"/>
+                        </svg>
+                        <p>${filterText ? '検索結果が見つかりません' : 'まだメモがありません'}</p>
+                    </div>
+                `;
+                return;
+            }
+
+            grid.innerHTML = sortedMemos.map(memo => `
+                <div class="memo-card">
+                    <div class="memo-header">
+                        <div class="memo-title">${escapeHtml(memo.title)}</div>
+                        <div class="memo-actions">
+                            <button class="btn-icon edit" onclick="openEditModal('${memo.id}')" title="編集">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/>
+                                    <path d="m15 5 4 4"/>
+                                </svg>
+                            </button>
+                            <button class="btn-icon delete" onclick="openConfirm('${memo.id}')" title="削除">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M3 6h18M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="memo-content">${escapeHtml(memo.content)}</div>
+                    <div class="memo-footer">
+                        <span class="memo-date">${formatDate(memo.updatedAt)}</span>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function openModal() {
+            editingId = null;
+            document.getElementById('modalTitle').textContent = '新規メモ';
+            document.getElementById('titleInput').value = '';
+            document.getElementById('contentInput').value = '';
+            document.getElementById('modalOverlay').classList.add('active');
+            document.getElementById('titleInput').focus();
+        }
+
+        function openEditModal(id) {
+            const memo = memos.find(m => m.id === id);
+            if (!memo) return;
+
+            editingId = id;
+            document.getElementById('modalTitle').textContent = 'メモを編集';
+            document.getElementById('titleInput').value = memo.title;
+            document.getElementById('contentInput').value = memo.content;
+            document.getElementById('modalOverlay').classList.add('active');
+            document.getElementById('titleInput').focus();
+        }
+
+        function closeModal() {
+            document.getElementById('modalOverlay').classList.remove('active');
+            editingId = null;
+        }
+
+        function closeModalOutside(event) {
+            if (event.target === document.getElementById('modalOverlay')) {
+                closeModal();
+            }
+        }
+
+        function saveMemo() {
+            const title = document.getElementById('titleInput').value.trim();
+            const content = document.getElementById('contentInput').value.trim();
+
+            if (!title && !content) {
+                alert('タイトルまたは内容を入力してください。');
+                return;
+            }
+
+            const displayTitle = title || '無題のメモ';
+
+            if (editingId) {
+                const index = memos.findIndex(m => m.id === editingId);
+                if (index !== -1) {
+                    memos[index].title = displayTitle;
+                    memos[index].content = content;
+                    memos[index].updatedAt = new Date().toISOString();
+                }
+            } else {
+                memos.push({
+                    id: generateId(),
+                    title: displayTitle,
+                    content: content,
+                    createdAt: new Date().toISOString(),
+                    updatedAt: new Date().toISOString()
+                });
+            }
+
+            saveToStorage();
+            renderMemos(document.getElementById('searchInput').value);
+            closeModal();
+        }
+
+        function openConfirm(id) {
+            deletingId = id;
+            const memo = memos.find(m => m.id === id);
+            document.getElementById('deletePreview').textContent = memo ? memo.title : '';
+            document.getElementById('confirmOverlay').classList.add('active');
+        }
+
+        function closeConfirm() {
+            document.getElementById('confirmOverlay').classList.remove('active');
+            deletingId = null;
+        }
+
+        function closeConfirmOutside(event) {
+            if (event.target === document.getElementById('confirmOverlay')) {
+                closeConfirm();
+            }
+        }
+
+        function confirmDelete() {
+            if (deletingId) {
+                memos = memos.filter(m => m.id !== deletingId);
+                saveToStorage();
+                renderMemos(document.getElementById('searchInput').value);
+                closeConfirm();
+            }
+        }
+
+        function filterMemos() {
+            const searchText = document.getElementById('searchInput').value;
+            renderMemos(searchText);
+        }
+
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                if (document.getElementById('confirmOverlay').classList.contains('active')) {
+                    closeConfirm();
+                } else if (document.getElementById('modalOverlay').classList.contains('active')) {
+                    closeModal();
+                }
+            }
+        });
+
+        renderMemos();
+    </script>
+</body>
+</html>
+
+
+
