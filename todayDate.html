@@ -4,19 +4,50 @@
     <meta charset="utf-8" />
     <title>今日の日付</title>
     
-    <!-- 必須！スマホで適切なスケールになるおまじない -->
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-  
+    
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <style>
+ 
+p {
+  display: flex;
+           justify-content: center;
+           align-items: center; 
+           height:2.5rem;
+           width:8rem;
+  color: navy;
+  padding: 5px;
+  background: lime;
+  border-radius: 15px;
+}
+
+
+ .today{
+           display: flex;
+           justify-content: center;
+           align-items: center; 
+           width:20rem;
+           height:2.5rem;
+            background: yellow;
+            border: none;
+            border-radius: 15px;
+            color: aqua;  
+}                      
+
+
+    </style>
+    
+    
   </head>
   <body>
-   
- <div>
-  <h2>【今日の日付】</h2>
+ 
+  <div>
+ 
+  <p>  今日の日付　</p>
   
-  <h2 id = "d2" ><h2>
+  <p id = "d2"  class ="today" style="margin-left:20px" ></p>
 
-</div>
-
+  </div>
 
 <script>
 
