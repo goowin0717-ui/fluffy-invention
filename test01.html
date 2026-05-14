@@ -7,10 +7,17 @@
     
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     
+    
     <style>
+
+.responsive-video {
+  max-width: 100%;
+  height: auto;
+}
+
+</style>
     
-    
-        </style>
+     
     
     
   </head>
@@ -22,7 +29,10 @@
   <audio src="mistery05.mp3" controls></audio>
 
   
-  <video src="GenAImovie01.MP4" type="video/mp4" width="20" height="15" controls></video>
+  <video controls class="responsive-video">
+  <source src="GenAImovie01.MP4" type="video/mp4">
+  
+</video>
 
 
   
@@ -36,3 +46,10 @@
 
   </body>
 </html>
+
+
+<!--
+
+  <video src="GenAImovie01.MP4" type="video/mp4" width="20" height="15" controls></video>
+  
+  -->
