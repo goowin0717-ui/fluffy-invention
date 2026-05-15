@@ -1,33 +1,448 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="ja">
-  <head>
-    <meta charset="utf-8" />
-    <title>TEST</title>
-    
-    
+<head>
+    <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    
+    <title>時計＆タイマー</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/noto-sans-jp@5.0.17/400.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/noto-sans-jp@5.0.17/500.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/noto-sans-jp@5.0.17/700.css">
     <style>
-    
-    
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+            font-family: 'Noto Sans JP', sans-serif;
+            padding: 20px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 420px;
+        }
+
+        /* Tabs */
+        .tabs {
+            display: flex;
+            gap: 4px;
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 16px;
+            padding: 4px;
+            margin-bottom: 24px;
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 14px;
+            border: none;
+            background: transparent;
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            border-radius: 12px;
+            transition: all 0.3s ease;
+        }
+
+        .tab-btn.active {
+            background: rgba(255, 255, 255, 0.15);
+            color: #fff;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+
+        .tab-btn:hover:not(.active) {
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        /* Panels */
+        .panel {
+            display: none;
+        }
+
+        .panel.active {
+            display: block;
+            animation: fadeIn 0.4s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Clock Card */
+        .card {
+            background: rgba(255, 255, 255, 0.07);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 24px;
+            padding: 40px 30px;
+            text-align: center;
+        }
+
+        .date-display {
+            font-size: 15px;
+            color: rgba(255, 255, 255, 0.6);
+            margin-bottom: 12px;
+            letter-spacing: 1px;
+        }
+
+        .week-display {
+            font-size: 14px;
+            color: #7c8aff;
+            margin-bottom: 28px;
+            font-weight: 500;
+        }
+
+        .time-display {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+
+        .time-unit {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .time-value {
+            font-size: 72px;
+            font-weight: 700;
+            color: #fff;
+            line-height: 1;
+            background: linear-gradient(135deg, #fff, #c4c8ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            min-width: 90px;
+        }
+
+        .time-label {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.4);
+            margin-top: 8px;
+            letter-spacing: 2px;
+        }
+
+        .time-sep {
+            font-size: 56px;
+            color: rgba(255, 255, 255, 0.4);
+            font-weight: 300;
+            padding-bottom: 24px;
+            animation: blink 1s infinite;
+        }
+
+        .time-sep.solid {
+            animation: none;
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.2; }
+        }
+
+        .ampm {
+            font-size: 16px;
+            color: #7c8aff;
+            font-weight: 500;
+            align-self: flex-start;
+            margin-top: 16px;
+            margin-left: 4px;
+        }
+
+        .seconds-display {
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.3);
+            letter-spacing: 2px;
+        }
+
+        /* Timer Card */
+        .timer-circle-container {
+            position: relative;
+            width: 260px;
+            height: 260px;
+            margin: 0 auto 32px;
+        }
+
+        .timer-svg {
+            transform: rotate(-90deg);
+            width: 260px;
+            height: 260px;
+        }
+
+        .timer-track {
+            fill: none;
+            stroke: rgba(255, 255, 255, 0.08);
+            stroke-width: 8;
+        }
+
+        .timer-progress {
+            fill: none;
+            stroke: url(#gradient);
+            stroke-width: 8;
+            stroke-linecap: round;
+            transition: stroke-dashoffset 0.5s linear;
+        }
+
+        .timer-time {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+        }
+
+        .timer-time .time-value {
+            font-size: 48px;
+            min-width: auto;
+            -webkit-text-fill-color: #fff;
+        }
+
+        .timer-status {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.4);
+            margin-top: 4px;
+            letter-spacing: 1px;
+        }
+
+        /* Timer Input */
+        .timer-input-section {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            margin-bottom: 32px;
+        }
+
+        .timer-input-group {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .timer-input-group label {
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.4);
+            margin-bottom: 6px;
+            letter-spacing: 1px;
+        }
+
+        .timer-input-group input {
+            width: 72px;
+            padding: 12px 8px;
+            text-align: center;
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            color: #fff;
+            font-size: 24px;
+            font-weight: 600;
+            font-family: inherit;
+            outline: none;
+            transition: border-color 0.2s ease;
+        }
+
+        .timer-input-group input:focus {
+            border-color: #7c8aff;
+        }
+
+        .timer-input-sep {
+            font-size: 28px;
+            color: rgba(255, 255, 255, 0.3);
+            align-self: flex-end;
+            padding-bottom: 12px;
+        }
+
+        /* Timer Controls */
+        .timer-controls {
+            display: flex;
+            justify-content: center;
+            gap: 16px;
+        }
+
+        .btn-timer {
+            width: 64px;
+            height: 64px;
+            border: none;
+            border-radius: 50%;
+            font-size: 22px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .btn-timer:active {
+            transform: scale(0.92);
+        }
+
+        .btn-start {
+            background: linear-gradient(135deg, #5378ff, #7c5cff);
+            color: #fff;
+            box-shadow: 0 8px 24px rgba(83, 120, 255, 0.4);
+        }
+
+        .btn-start:hover {
+            box-shadow: 0 10px 30px rgba(83, 120, 255, 0.5);
+        }
+
+        .btn-pause {
+            background: rgba(255, 180, 80, 0.2);
+            color: #ffb450;
+            border: 2px solid rgba(255, 180, 80, 0.3);
+        }
+
+        .btn-pause:hover {
+            background: rgba(255, 180, 80, 0.3);
+        }
+
+        .btn-reset {
+            background: rgba(255, 100, 100, 0.15);
+            color: #ff8a8a;
+            border: 2px solid rgba(255, 100, 100, 0.2);
+        }
+
+        .btn-reset:hover {
+            background: rgba(255, 100, 100, 0.25);
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        /* Finish animation */
+        .timer-finished .time-value {
+            animation: pulse 0.5s infinite;
+            -webkit-text-fill-color: #ff6b6b;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        @media (max-width: 480px) {
+            .time-value {
+                font-size: 56px;
+                min-width: 70px;
+            }
+            .time-sep {
+                font-size: 44px;
+            }
+            .timer-circle-container {
+                width: 220px;
+                height: 220px;
+            }
+            .timer-svg {
+                width: 220px;
+                height: 220px;
+            }
+            .timer-time .time-value {
+                font-size: 38px;
+            }
+        }
     </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Tabs -->
+   
+   
+        <!-- Clock Panel -->
+        
+        <div class="panel active" id="clockPanel">
+            <div class="card">
+                <div class="date-display" id="dateDisplay"></div>
+                <div class="week-display" id="weekDisplay"></div>
+                <div class="time-display">
+                    <div class="time-unit">
+                        <div class="time-value" id="clockHours">00</div>
+                        <div class="time-label">時</div>
+                    </div>
+                    <div class="time-sep">:</div>
+                    <div class="time-unit">
+                        <div class="time-value" id="clockMinutes">00</div>
+                        <div class="time-label">分</div>
+                    </div>
+                    <div class="time-sep">:</div>
+                    <div class="time-unit">
+                        <div class="time-value" id="clockSeconds">00</div>
+                        <div class="time-label">秒</div>
+                    </div>
+                    <div class="ampm" id="clockAmPm"></div>
+                </div>
+                <div class="seconds-display" id="clockSecondsDisplay"></div>
+            </div>
+        </div>
+
+        <!-- Timer Panel -->
+        
+        
+        
+     
+     
+                <!-- Timer Circle Display -->
+                
+             
+            </div>
+        </div>
+    </div>
+
+    <script>
     
-    
-    </head>
-  <body>
-  
-     <button id="playBtn">mp3再生</button>
+        /* ===== Tab Switching ===== */
+        
+        
 
-<script>
+        /* ===== Clock ===== */
+        
+        
+        const weekNames = ['日', '月', '火', '水', '木', '金', '土'];
 
-  const audio = new Audio('eternal-night.mp3');
-  
-  document.getElementById('playBtn').onclick = () => {
-    audio.play();
-  };
-  
-</script>
+        function updateClock() {
+            const now = new Date();
+            const hours = now.getHours();
+            const minutes = now.getMinutes();
+            const seconds = now.getSeconds();
 
- 
-  </body>
+            document.getElementById('clockHours').textContent = String(hours).padStart(2, '0');
+            document.getElementById('clockMinutes').textContent = String(minutes).padStart(2, '0');
+            document.getElementById('clockSeconds').textContent = String(seconds).padStart(2, '0');
+
+            const year = now.getFullYear();
+            const month = now.getMonth() + 1;
+            const day = now.getDate();
+            const week = weekNames[now.getDay()];
+
+      /* ===== wareki===== */
+      
+            const wareki = year - 2018
+
+
+            document.getElementById('dateDisplay').textContent = `${year}年(令和${wareki}年)${month}月${day}日`;
+            document.getElementById('weekDisplay').textContent = `(${week}曜日)`;
+
+            const isPM = hours >= 12;
+            document.getElementById('clockAmPm').textContent = isPM ? '午後' : '午前';
+        }
+
+        setInterval(updateClock, 1000);
+        updateClock();
+
+        /* ===== Timer ===== */
+        
+       
+    </script>
+</body>
 </html>
+
