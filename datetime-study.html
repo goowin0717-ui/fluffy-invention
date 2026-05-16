@@ -23,7 +23,8 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+            /* background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);  */
+            background:red;
             font-family: 'Noto Sans JP', sans-serif;
             padding: 20px;
         }
@@ -41,6 +42,7 @@
         /* Panels */
         .panel {
             display: none;
+            background:black;
         }
 
         .panel.active {
@@ -69,6 +71,7 @@
             color: rgba(255, 255, 255, 0.6);
             margin-bottom: 12px;
             letter-spacing: 1px;
+            background:lime;
         }
 
         .week-display {
@@ -76,6 +79,7 @@
             color: #7c8aff;
             margin-bottom: 28px;
             font-weight: 500;
+            background:blue;;
         }
 
         .time-display {
@@ -84,16 +88,18 @@
             justify-content: center;
             gap: 8px;
             margin-bottom: 16px;
+            background:aqua;
         }
 
         .time-unit {
             display: flex;
             flex-direction: column;
             align-items: center;
+            background:yellow;
         }
        
         .time-value {
-            font-size: 72px;
+            font-size: 60px;
             font-weight: 700;
             color: #fff;
             line-height: 1;
@@ -101,7 +107,7 @@
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
-            min-width: 90px;
+            min-width: 70px;
         }
 
         .time-label {
@@ -109,6 +115,7 @@
             color: rgba(255, 255, 255, 0.4);
             margin-top: 8px;
             letter-spacing: 2px;
+            background:red;
         }
 
         .time-sep {
@@ -143,6 +150,21 @@
             letter-spacing: 2px;
         }
 
+       /*  back */
+       
+            
+             .back {
+            background: rgba(0,255, 255, 0.7);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 24px;
+            padding: 40px 30px;
+            text-align: center;
+        }
+       
+
+
+
         /* Timer Card */
         
         
@@ -163,7 +185,6 @@
 
     <div class="container">
         <!-- Tabs -->
-   
    
         <!-- Clock Panel -->
         
@@ -188,22 +209,18 @@
                     </div>
                     <div class="ampm" id="clockAmPm"></div>
                 </div>
-                <div class="seconds-display" id="clockSecondsDisplay"></div>
-            </div>
-        </div>
-
-        <!-- Timer Panel -->
-        
-        
-        
-     
-     
-                <!-- Timer Circle Display -->
                 
-             
-         
+                 
+                
+            </div>
+            
+            <div class="back" </div>
+           
+        </div>
+        
+        
        
-    </div>
+
 
     <script>
     
@@ -239,13 +256,14 @@
             document.getElementById('dateDisplay').textContent = `${year}年(令和${wareki}年)${month}月${day}日`;
             document.getElementById('weekDisplay').textContent = `(${week}曜日)`;
 
-            const isPM = hours >= 12;
+    <!--      const isPM = hours >= 12;
             document.getElementById('clockAmPm').textContent = isPM ? '午後' : '午前';
         }
-
+   -->
         setInterval(updateClock, 1000);
         updateClock();
-
+        
+        
         /* ===== Timer ===== */
         
        
