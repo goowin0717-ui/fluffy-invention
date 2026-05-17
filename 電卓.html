@@ -13,6 +13,7 @@
 
         body {
             display: flex;
+            flex-direction: column;
             justify-content: center;
             align-items: center;
             min-height: 100vh;
@@ -64,8 +65,8 @@
         button {
             border: none;
             border-radius: 12px;
-            padding: 20px;
-            font-size: 20px;
+            padding: 10px;
+            font-size: 30px;
             font-weight: 600;
             cursor: pointer;
             transition: all 0.15s ease;
@@ -120,6 +121,15 @@
         .btn-zero {
             grid-column: span 2;
         }
+        /*  底辺にボックスを追加　*/
+        
+        .btn-rtn{
+        　background: #3d3d5c;
+            color: #fff;
+         }
+        
+        
+        
     </style>
 </head>
 <body>
@@ -153,7 +163,10 @@
             <button class="btn-number" onclick="appendDecimal()">.</button>
             <button class="btn-equal" onclick="calculate()">=</button>
         </div>
+        
     </div>
+    
+    <button class="btn-number" onclick="returnPage()">back</div>
 
     <script>
         let currentValue = '0';
@@ -270,6 +283,17 @@
                 updateDisplay();
             }
         }
+        
+    /* return script */
+    
+     /* document.getElementById('return-id').textContent='戻る' */
+     
+     
+     function returnPage() {
+           window.open("index.html");
+        }
+       
+         
     </script>
 </body>
 </html>
