@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>株価ダッシュボード</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+    background: #0f1117;
+    color: #e0e0e0;
+    min-height: 100vh;
+    padding: 20px;
+  }
+  h1 { font-size: 1.4em; font-weight: 700; color: #fff; letter-spacing: 0.05em; }
+  .header { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; }
+  .badge { font-size: 0.7em; background: #1e3a5f; color: #5ba3f5; padding: 3px 8px; border-radius: 20px; }
+
+  /* API Key */
+  .apikey-bar {
+    background: #1a1d27;
+    border: 1px solid #2a2d3e;
+    border-radius: 10px;
+    padding: 14px 18px;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  .apikey-bar label { font-size: 0.85em; color: #aaa; white-space: nowrap; }
+  .apikey-bar input {
+    flex: 1; min-width: 220px;
+    background: #0f1117; border: 1px solid #3a3d50;
+    color: #e0e0e0; padding: 7px 12px; border-radius: 6px; font-size: 0.9em;
+  }
+  .apikey-bar input:focus { outline: none; border-color: #5ba3f5; }
+  .btn {
+    padding: 7px 16px; border: none; border-radius: 6px;
+    font-size: 0.85em; font-weight: 600; cursor: pointer; transition: opacity 0.2s;
+  }
+  .btn:hover { opacity: 0.85; }
+  .btn-primary { background: #2563eb; color: #fff; }
+  .btn-sm { padding: 4px 10px; font-size: 0.78em; }
+  .btn-danger { background: #7f1d1d; color: #fca5a5; }
+  .btn-success { background: #14532d; color: #86efac; }
+  .btn-gray { background: #2a2d3e; color: #aaa; }
+
+  /* 注意書き */
+  .notice {
+    font-size: 0.78em; color: #888;
+    background: #1a1d27; border: 1px solid #2a2d3e;
+    border-radius: 8px; padding: 10px 14px; margin-bottom: 20px;
+  }
+  .notice a { color: #5ba3f5; }
+
+  /* サマリーカード */
+  .summary-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 14px;
+    margin-bottom: 24px;
+  }
+  .card {
+    background: #1a1d27;
+    border: 1px solid #2a2d3e;
+    border-radius: 12px;
+    padding: 16px 20px;
+    position: relative;
+  }
+  .card-title { font-size: 0.75em; color: #888; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.08em; }
+  .card-value { font-size: 1.7em; font-weight: 700; color: #fff; }
+  .card-change { font-size: 0.82em; margin-top: 4px; }
+  .up   { color: #4ade80; }
+  .down { color: #f87171; }
+  .flat { color: #aaa; }
+  .card-loading { color: #555; font-size: 0.9em; }
+
+  /* 銘柄テーブル */
+  .section-title {
+    font-size: 0.9em; font-weight: 700; color: #ccc;
+    margin-bottom: 12px; letter-spacing: 0.05em;
+  }
+  .table-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 0.88em; }
+  th {
+    background: #1a1d27; color: #888;
+    padding: 10px 14px; text-align: left;
+    font-weight: 600; font-size: 0.78em; text-transform: uppercase;
+    border-bottom: 1px solid #2a2d3e;
+  }
+  td { padding: 10px 14px; border-bottom: 1px solid #1e2130; vertical-align: middle; }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: #1e2235; }
+  .symbol { font-weight: 700; color: #fff; font-family: monospace; }
+  .name-cell { color: #bbb; font-size: 0.9em; }
+
+  /* 銘柄追加 */
+  .add-bar {
+    display: flex; gap: 8px; margin-top: 14px; flex-wrap: wrap;
+  }
+  .add-bar input {
+    background: #1a1d27; border: 1px solid #3a3d50;
+    color: #e0e0e0; padding: 7px 12px; border-radius: 6px;
+    font-size: 0.88em; width: 110px;
+  }
+  .add-bar input:focus { outline: none; border-color: #5ba3f5; }
+
+  /* スピナー */
+  .spinner {
+    display: inline-block; width: 12px; height: 12px;
+    border: 2px solid #3a3d50; border-top-color: #5ba3f5;
+    border-radius: 50%; animation: spin 0.7s linear infinite;
+    vertical-align: middle; margin-right: 4px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* 最終更新 */
+  .footer { margin-top: 20px; font-size: 0.75em; color: #555; text-align: right; }
+
+  /* レスポンシブ */
+  @media (max-width: 500px) {
+    body { padding: 12px; }
+    .card-value { font-size: 1.4em; }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>📈 株価ダッシュボード</h1>
+  <span class="badge">Alpha Vantage</span>
+</div>
+
+<div class="notice">
+  🔑 APIキーは <a href="https://www.alphavantage.co/support/#api-key" target="_blank">alphavantage.co</a> で無料取得できます（登録のみ・無料枠: 25リクエスト/日）。<br>
+  ⚠️ 日経平均は <code>^N225</code> がAlpha Vantageでは非対応のため、<b>EWJ（iShares MSCI Japan ETF）</b>で代替表示します。<br>
+  ⚠️ 日本株は市場クローズ時は前日終値を表示します（15分ディレイ）。
+</div>
+
+<div class="apikey-bar">
+  <label>🔑 APIキー：</label>
+  <input type="text" id="apiKeyInput" placeholder="YOUR_API_KEY を入力" />
+  <button class="btn btn-primary" onclick="saveAndRefresh()">保存して更新</button>
+</div>
+
+<!-- サマリーカード -->
+<div class="summary-grid">
+  <div class="card" id="card-nikkei">
+    <div class="card-title">日経平均 (EWJ)</div>
+    <div class="card-value card-loading">—</div>
+  </div>
+  <div class="card" id="card-usdjpy">
+    <div class="card-title">ドル円 (USD/JPY)</div>
+    <div class="card-value card-loading">—</div>
+  </div>
+</div>
+
+<!-- 銘柄テーブル -->
+<div class="section-title">📋 ウォッチリスト</div>
+<div class="table-wrap">
+  <table id="stockTable">
+    <thead>
+      <tr>
+        <th>ティッカー</th>
+        <th>銘柄名</th>
+        <th>現在値</th>
+        <th>前日比</th>
+        <th>変化率</th>
+        <th>操作</th>
+      </tr>
+    </thead>
+    <tbody id="stockTbody">
+    </tbody>
+  </table>
+</div>
+
+<div class="add-bar">
+  <input type="text" id="newSymbol" placeholder="例: 7203.T" maxlength="12" />
+  <button class="btn btn-success btn-sm" onclick="addSymbol()">＋ 追加</button>
+  <button class="btn btn-gray btn-sm" onclick="refreshAll()">🔄 全て更新</button>
+</div>
+
+<div class="footer" id="lastUpdated">最終更新: —</div>
+
+<script>
+// ─── 初期銘柄リスト ────────────────────────────
+const DEFAULT_SYMBOLS = [
+  { s: '7203.T', name: 'トヨタ自動車' },
+  { s: '6758.T', name: 'ソニーグループ' },
+  { s: '9984.T', name: 'ソフトバンクG' },
+  { s: '8306.T', name: '三菱UFJ FG' },
+  { s: '6501.T', name: '日立製作所' },
+  { s: '6861.T', name: 'キーエンス' },
+  { s: '4063.T', name: '信越化学工業' },
+  { s: '9432.T', name: 'NTT' },
+  { s: '8035.T', name: '東京エレクトロン' },
+  { s: '6367.T', name: 'ダイキン工業' },
+];
+
+// ─── State ────────────────────────────────────
+let apiKey = '';
+let symbols = JSON.parse(JSON.stringify(DEFAULT_SYMBOLS)); // deep copy
+
+// ─── APIキー ──────────────────────────────────
+function saveAndRefresh() {
+  const v = document.getElementById('apiKeyInput').value.trim();
+  if (!v) { alert('APIキーを入力してください。'); return; }
+  apiKey = v;
+  refreshAll();
+}
+
+// ─── Alpha Vantage fetch ──────────────────────
+async function fetchQuote(sym) {
+  const url = `https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=${encodeURIComponent(sym)}&apikey=${apiKey}`;
+  const res = await fetch(url);
+  const json = await res.json();
+  const q = json['Global Quote'];
+  if (!q || !q['05. price']) return null;
+  return {
+    price:  parseFloat(q['05. price']),
+    change: parseFloat(q['09. change']),
+    pct:    parseFloat(q['10. change percent'].replace('%', '')),
+    prev:   parseFloat(q['08. previous close']),
+  };
+}
+
+async function fetchForex(from, to) {
+  const url = `https://www.alphavantage.co/query?function=CURRENCY_EXCHANGE_RATE&from_currency=${from}&to_currency=${to}&apikey=${apiKey}`;
+  const res = await fetch(url);
+  const json = await res.json();
+  const r = json['Realtime Currency Exchange Rate'];
+  if (!r) return null;
+  return { rate: parseFloat(r['5. Exchange Rate']) };
+}
+
+// ─── カード更新 ───────────────────────────────
+function setCardLoading(id, title) {
+  const c = document.getElementById(id);
+  c.innerHTML = `<div class="card-title">${title}</div>
+    <div class="card-value"><span class="spinner"></span></div>`;
+}
+
+function setCardData(id, title, value, changeStr, cls) {
+  const c = document.getElementById(id);
+  c.innerHTML = `<div class="card-title">${title}</div>
+    <div class="card-value">${value}</div>
+    <div class="card-change ${cls}">${changeStr}</div>`;
+}
+
+function setCardError(id, title, msg) {
+  const c = document.getElementById(id);
+  c.innerHTML = `<div class="card-title">${title}</div>
+    <div class="card-value" style="font-size:0.85em;color:#f87171;">${msg}</div>`;
+}
+
+async function loadNikkei() {
+  setCardLoading('card-nikkei', '日経平均 (EWJ)');
+  try {
+    const d = await fetchQuote('EWJ');
+    if (!d) { setCardError('card-nikkei', '日経平均 (EWJ)', 'データ取得失敗'); return; }
+    const sign = d.change >= 0 ? '+' : '';
+    const cls  = d.change > 0 ? 'up' : d.change < 0 ? 'down' : 'flat';
+    setCardData('card-nikkei', '日経平均 (EWJ)',
+      `$${d.price.toFixed(2)}`,
+      `${sign}${d.change.toFixed(2)} (${sign}${d.pct.toFixed(2)}%)`, cls);
+  } catch(e) {
+    setCardError('card-nikkei', '日経平均 (EWJ)', 'エラー: ' + e.message);
+  }
+}
+
+async function loadUsdjpy() {
+  setCardLoading('card-usdjpy', 'ドル円 (USD/JPY)');
+  try {
+    const d = await fetchForex('USD', 'JPY');
+    if (!d) { setCardError('card-usdjpy', 'ドル円 (USD/JPY)', 'データ取得失敗'); return; }
+    setCardData('card-usdjpy', 'ドル円 (USD/JPY)',
+      `¥${d.rate.toFixed(2)}`, '為替レート', 'flat');
+  } catch(e) {
+    setCardError('card-usdjpy', 'ドル円 (USD/JPY)', 'エラー: ' + e.message);
+  }
+}
+
+// ─── テーブル ─────────────────────────────────
+function renderTable() {
+  const tbody = document.getElementById('stockTbody');
+  tbody.innerHTML = symbols.map((item, i) => `
+    <tr id="row-${i}">
+      <td class="symbol">${escHtml(item.s)}</td>
+      <td class="name-cell">${escHtml(item.name || '—')}</td>
+      <td id="price-${i}"><span class="spinner"></span></td>
+      <td id="change-${i}">—</td>
+      <td id="pct-${i}">—</td>
+      <td>
+        <button class="btn btn-danger btn-sm" onclick="removeSymbol(${i})">削除</button>
+      </td>
+    </tr>
+  `).join('');
+}
+
+async function loadStock(i) {
+  const item = symbols[i];
+  if (!item) return;
+  try {
+    const d = await fetchQuote(item.s);
+    if (!d) {
+      document.getElementById(`price-${i}`).textContent = 'N/A';
+      document.getElementById(`change-${i}`).textContent = '—';
+      document.getElementById(`pct-${i}`).textContent = '—';
+      return;
+    }
+    const sign = d.change >= 0 ? '+' : '';
+    const cls  = d.change > 0 ? 'up' : d.change < 0 ? 'down' : 'flat';
+    const priceStr = item.s.endsWith('.T')
+      ? `¥${d.price.toLocaleString('ja-JP', {minimumFractionDigits: 1, maximumFractionDigits: 1})}`
+      : `$${d.price.toFixed(2)}`;
+    document.getElementById(`price-${i}`).innerHTML  = `<span style="color:#fff;font-weight:600">${priceStr}</span>`;
+    document.getElementById(`change-${i}`).innerHTML = `<span class="${cls}">${sign}${d.change.toFixed(1)}</span>`;
+    document.getElementById(`pct-${i}`).innerHTML    = `<span class="${cls}">${sign}${d.pct.toFixed(2)}%</span>`;
+  } catch(e) {
+    document.getElementById(`price-${i}`).textContent = 'エラー';
+  }
+}
+
+// ─── 追加・削除 ───────────────────────────────
+function addSymbol() {
+  const inp = document.getElementById('newSymbol');
+  const s = inp.value.trim().toUpperCase();
+  if (!s) return;
+  if (symbols.find(x => x.s === s)) { alert('すでに追加されています。'); return; }
+  symbols.push({ s, name: '' });
+  inp.value = '';
+  renderTable();
+  if (apiKey) loadStock(symbols.length - 1);
+}
+
+function removeSymbol(i) {
+  symbols.splice(i, 1);
+  renderTable();
+  if (apiKey) symbols.forEach((_, idx) => loadStock(idx));
+}
+
+// ─── 全体更新 ─────────────────────────────────
+async function refreshAll() {
+  if (!apiKey) { alert('APIキーを入力して「保存して更新」を押してください。'); return; }
+  renderTable();
+
+  // APIリクエストを順番に実行（レート制限対策: 1秒間隔）
+  loadNikkei();
+  await delay(1200);
+  loadUsdjpy();
+  await delay(1200);
+  for (let i = 0; i < symbols.length; i++) {
+    await loadStock(i);
+    if (i < symbols.length - 1) await delay(1200);
+  }
+
+  document.getElementById('lastUpdated').textContent =
+    '最終更新: ' + new Date().toLocaleString('ja-JP');
+}
+
+// ─── Util ─────────────────────────────────────
+function delay(ms) { return new Promise(r => setTimeout(r, ms)); }
+function escHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+// ─── 初期描画 ─────────────────────────────────
+renderTable();
+</script>
+</body>
+</html>
