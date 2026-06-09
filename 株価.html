@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>株価ダッシュボード(v2)</title>
+<title>株価ダッシュボード</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body {
@@ -117,7 +117,7 @@
 <body>
 
 <div class="header">
-  <h1>📈 株価ダッシュボード</h1>
+  <h1>📈 株価ダッシュボード(v2)</h1>
   <span class="badge">Alpha Vantage</span>
 </div>
 
@@ -178,14 +178,15 @@
 <script>
 // ── 初期銘柄 ──────────────────────────────────────
 const DEFAULT_SYMBOLS = [
- { s: '9432.T', name: 'NTT' },
+//ピックアップした銘柄
+/* { s: '9432.T', name: 'NTT' },
  { s: '8306.T', name: '三菱UFJ FG' },
  { s: '5020.T', name: 'ENEOS' },
  { s: '9023.T', name: '東京地下鉄' },
- { s: '1572.T', name: '中国H株ブル2倍' },
+ { s: '1572.T', name: '中国H株ブル2倍' },*/
  
 //オリジナルの銘柄配列
- /* { s: '7203.T', name: 'トヨタ自動車' },
+  { s: '7203.T', name: 'トヨタ自動車' },
   { s: '6758.T', name: 'ソニーグループ' },
   { s: '9984.T', name: 'ソフトバンクG' },
   { s: '8306.T', name: '三菱UFJ FG' },
@@ -194,7 +195,7 @@ const DEFAULT_SYMBOLS = [
   { s: '4063.T', name: '信越化学工業' },
   { s: '9432.T', name: 'NTT' },
   { s: '8035.T', name: '東京エレクトロン' },
-  { s: '6367.T', name: 'ダイキン工業' },*/
+  { s: '6367.T', name: 'ダイキン工業' },
 ];
 
 // ── State ─────────────────────────────────────────
