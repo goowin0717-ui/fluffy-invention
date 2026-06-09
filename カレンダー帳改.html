@@ -282,7 +282,8 @@
         const getMonday = (d) => {
             const date = new Date(d);
             const day = date.getDay();
-            const diff = date.getDate() - day + (day === 0 ? -6 : 1);
+            //-6>-7
+            const diff = date.getDate() - day + (day === 0 ? -6 : 0);
             date.setDate(diff);
             date.setHours(0,0,0,0);
             return date;
