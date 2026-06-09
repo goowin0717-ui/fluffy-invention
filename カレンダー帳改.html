@@ -19,74 +19,69 @@
             --today-bg: #f3f0ff;
             --today-border: #8b5cf6;
             --danger: #ef4444;
-            --success: #10b981;
-            --shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+            --shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
         }
 
-        * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
+        * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; -webkit-tap-highlight-color: transparent; }
         body {
             font-family: 'Noto Sans JP', sans-serif;
             background: var(--bg);
             color: var(--text-main);
-            min-height: 100vh;
-            padding-bottom: 40px;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
         }
-
-        .app-container { max-width: 480px; margin: 0 auto; position: relative; }
 
         /* Header */
         .header {
-            position: sticky;
-            top: 0;
-            z-index: 10;
             background: var(--bg);
-            padding: 12px 16px 8px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--border);
+            z-index: 10;
+            flex-shrink: 0;
         }
-
         .header-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
-        .header h1 { font-size: 20px; font-weight: 700; color: var(--primary); display: flex; align-items: center; gap: 6px; }
+        .header h1 { font-size: 18px; font-weight: 700; color: var(--primary); display: flex; align-items: center; gap: 6px; }
         .btn-today {
             padding: 6px 14px; background: var(--primary); color: #fff; border: none;
             border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; transition: 0.2s;
         }
         .btn-today:hover { opacity: 0.9; }
-        .btn-today:active { transform: scale(0.96); }
-
-        .nav-controls { display: flex; align-items: center; gap: 12px; padding-bottom: 8px; }
+        .nav-controls { display: flex; align-items: center; gap: 12px; }
         .btn-nav {
-            width: 32px; height: 32px; border: 1px solid var(--border); background: var(--card);
-            border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center;
+            width: 30px; height: 30px; border: 1px solid var(--border); background: var(--card);
+            border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center;
             color: var(--text-sub); transition: 0.2s; font-size: 16px;
         }
         .btn-nav:hover { background: var(--primary-light); color: var(--primary); }
         .week-label { font-size: 15px; font-weight: 600; color: var(--text-main); flex: 1; text-align: center; }
 
+        /* Calendar Container */
+        .calendar-wrapper {
+            flex: 1;
+            overflow-y: auto;
+            position: relative;
+            padding: 0 8px 20px;
+        }
+
         /* Sticky Day Names */
         .day-names {
             position: sticky;
-            top: 76px;
-            z-index: 9;
+            top: 0;
+            z-index: 5;
             display: grid;
             grid-template-columns: repeat(7, 1fr);
             gap: 4px;
             background: var(--bg);
-            padding: 6px 0;
+            padding: 8px 0 4px;
             border-bottom: 1px solid var(--border);
         }
         .day-name { text-align: center; font-size: 11px; font-weight: 600; color: var(--text-sub); padding: 4px 0; }
         .day-name.sun { color: var(--danger); }
         .day-name.sat { color: var(--primary); }
 
-        /* Calendar Scroll Area */
-        .calendar-scroll {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-            padding: 8px;
-            min-height: 60vh;
-        }
-
+        /* Week Rows */
         .week-row {
             display: grid;
             grid-template-columns: repeat(7, 1fr);
@@ -94,25 +89,25 @@
             background: var(--card);
             border-radius: 12px;
             padding: 6px;
+            margin-top: 8px;
             box-shadow: var(--shadow);
-            animation: fadeIn 0.3s ease;
+            animation: fadeIn 0.25s ease;
         }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
 
         .day-cell {
-            min-height: 85px;
+            min-height: 80px;
             padding: 4px;
-            border-radius: 8px;
+            border-radius: 6px;
             cursor: pointer;
-            transition: background 0.2s, transform 0.1s;
+            transition: background 0.15s;
             display: flex;
             flex-direction: column;
             gap: 3px;
         }
-        .day-cell:hover { background: #f8fafc; }
-        .day-cell:active { transform: scale(0.98); }
+        .day-cell:hover { background: #f1f5f9; }
         .day-cell.today { background: var(--today-bg); border: 1.5px solid var(--today-border); }
-        .day-cell.other-month { opacity: 0.3; pointer-events: none; }
+        .day-cell.other-month { opacity: 0.35; pointer-events: none; }
 
         .day-num { font-size: 13px; font-weight: 600; text-align: center; margin-bottom: 2px; }
         .day-cell.sun .day-num { color: var(--danger); }
@@ -121,21 +116,22 @@
         .event-pill {
             font-size: 10px;
             padding: 2px 4px;
-            border-radius: 4px;
+            border-radius: 3px;
             background: var(--primary-light);
             color: var(--primary);
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
             cursor: pointer;
+            line-height: 1.3;
         }
-        .event-more { font-size: 9px; color: var(--text-sub); text-align: right; padding: 1px 4px; }
+        .event-more { font-size: 9px; color: var(--text-sub); text-align: right; padding: 1px 2px; }
 
-        /* Modal / Bottom Sheet */
+        /* Modal */
         .modal-overlay {
             position: fixed; inset: 0; background: rgba(0,0,0,0.4);
-            backdrop-filter: blur(4px); display: none; align-items: flex-end;
-            justify-content: center; z-index: 20;
+            backdrop-filter: blur(4px); display: none; align-items: center;
+            justify-content: center; z-index: 20; padding: 16px;
         }
         .modal-overlay.active { display: flex; animation: overlayIn 0.2s ease; }
         @keyframes overlayIn { from { opacity: 0; } to { opacity: 1; } }
@@ -143,65 +139,65 @@
         .modal-sheet {
             background: var(--card);
             width: 100%;
-            max-width: 480px;
+            max-width: 420px;
             max-height: 85vh;
-            border-radius: 20px 20px 0 0;
-            padding: 20px 20px 32px;
-            box-shadow: 0 -10px 40px rgba(0,0,0,0.15);
-            animation: slideUp 0.25s ease;
+            border-radius: 16px;
+            padding: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.15);
             overflow-y: auto;
-            transform: translateY(100%);
-            transition: transform 0.25s ease;
+            display: flex;
+            flex-direction: column;
         }
-        .modal-overlay.active .modal-sheet { transform: translateY(0); }
 
         .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
         .modal-title { font-size: 18px; font-weight: 700; }
         .btn-close {
-            width: 30px; height: 30px; border: none; background: #f1f5f9; border-radius: 8px;
+            width: 28px; height: 28px; border: none; background: #f1f5f9; border-radius: 6px;
             cursor: pointer; display: flex; align-items: center; justify-content: center; color: #64748b; transition: 0.2s;
         }
         .btn-close:hover { background: #e2e8f0; }
 
-        .existing-events { margin-bottom: 16px; }
-        .existing-events h3 { font-size: 14px; color: var(--text-sub); margin-bottom: 8px; font-weight: 600; }
+        .section { margin-bottom: 16px; }
+        .section h3 { font-size: 13px; color: var(--text-sub); margin-bottom: 8px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
         .event-list { display: flex; flex-direction: column; gap: 8px; }
+        
         .event-card {
-            background: var(--primary-light); border-radius: 10px; padding: 10px 12px; position: relative;
+            background: #f8fafc; border: 1px solid var(--border); border-radius: 10px; padding: 12px; position: relative;
+            transition: 0.2s;
         }
-        .event-card-title { font-size: 14px; font-weight: 600; color: var(--primary); margin-bottom: 4px; }
-        .event-card-body { font-size: 12px; color: var(--text-sub); white-space: pre-wrap; line-height: 1.5; }
-        .event-card-meta { font-size: 10px; color: #94a3b8; margin-top: 6px; display: flex; justify-content: space-between; }
+        .event-card:hover { border-color: var(--primary-light); }
+        .event-card-title { font-size: 14px; font-weight: 600; color: var(--text-main); margin-bottom: 4px; padding-right: 24px; }
+        .event-card-body { font-size: 13px; color: var(--text-sub); white-space: pre-wrap; line-height: 1.5; }
+        .event-card-meta { font-size: 10px; color: #94a3b8; margin-top: 6px; }
         .btn-delete {
-            background: transparent; border: none; color: #cbd5e1; cursor: pointer; font-size: 12px; transition: 0.2s;
+            position: absolute; top: 10px; right: 10px; background: transparent; border: none;
+            color: #cbd5e1; cursor: pointer; font-size: 16px; transition: 0.2s; padding: 4px;
         }
-        .btn-delete:hover { color: var(--danger); }
+        .btn-delete:hover { color: var(--danger); background: #fee2e2; border-radius: 4px; }
 
-        .divider { height: 1px; background: var(--border); margin: 16px 0; }
-        .add-form h3 { font-size: 14px; color: var(--text-sub); margin-bottom: 10px; font-weight: 600; }
-        .form-group { margin-bottom: 12px; }
-        .form-group label { display: block; font-size: 12px; font-weight: 600; color: var(--text-sub); margin-bottom: 4px; }
+        .divider { height: 1px; background: var(--border); margin: 12px 0; }
+        .form-group { margin-bottom: 10px; }
+        .form-group label { display: block; font-size: 11px; font-weight: 600; color: var(--text-sub); margin-bottom: 4px; }
         .form-group input, .form-group textarea {
-            width: 100%; padding: 10px 12px; border: 2px solid var(--border); border-radius: 10px;
+            width: 100%; padding: 8px 10px; border: 2px solid var(--border); border-radius: 8px;
             font-size: 14px; font-family: inherit; outline: none; transition: 0.2s; background: #fff;
         }
         .form-group input:focus, .form-group textarea:focus { border-color: var(--primary); }
-        .form-group textarea { min-height: 70px; resize: vertical; }
+        .form-group textarea { min-height: 60px; resize: vertical; }
 
         .btn-submit {
-            width: 100%; padding: 12px; border: none; border-radius: 10px;
+            width: 100%; padding: 10px; border: none; border-radius: 8px;
             background: var(--primary); color: #fff; font-size: 14px; font-weight: 600;
-            cursor: pointer; transition: 0.2s;
+            cursor: pointer; transition: 0.2s; margin-top: 4px;
         }
         .btn-submit:hover { opacity: 0.9; }
 
-        .empty-state { text-align: center; padding: 12px; color: var(--text-sub); font-size: 12px; background: #f8fafc; border-radius: 8px; }
+        .empty-state { text-align: center; padding: 16px; color: var(--text-sub); font-size: 12px; background: #f8fafc; border-radius: 8px; }
 
-        @media (min-width: 481px) {
-            .modal-overlay { align-items: center; padding: 20px; }
-            .modal-sheet { border-radius: 20px; max-height: 80vh; transform: scale(0.9); opacity: 0; }
-            .modal-overlay.active .modal-sheet { transform: scale(1); opacity: 1; }
-        }
+        /* Scrollbar */
+        .calendar-wrapper::-webkit-scrollbar { width: 6px; }
+        .calendar-wrapper::-webkit-scrollbar-track { background: transparent; }
+        .calendar-wrapper::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
     </style>
 </head>
 <body>
@@ -209,312 +205,239 @@
         <header class="header">
             <div class="header-top">
                 <h1>📅 スケジュール帳</h1>
-                <button class="btn-today" onclick="goToToday()">今日</button>
+                <button class="btn-today" onclick="window.app.goToToday()">今日へ</button>
             </div>
             <div class="nav-controls">
-                <button class="btn-nav" onclick="navWeek(-1)">↑</button>
+                <button class="btn-nav" onclick="window.app.navWeek(-1)">‹</button>
                 <span class="week-label" id="weekLabel">--</span>
-                <button class="btn-nav" onclick="navWeek(1)">↓</button>
+                <button class="btn-nav" onclick="window.app.navWeek(1)">›</button>
             </div>
         </header>
 
-        <div class="day-names">
-            <div class="day-name sun">日</div>
-            <div class="day-name">月</div>
-            <div class="day-name">火</div>
-            <div class="day-name">水</div>
-            <div class="day-name">木</div>
-            <div class="day-name">金</div>
-            <div class="day-name sat">土</div>
+        <div class="calendar-wrapper" id="scrollWrapper">
+            <div class="day-names">
+                <div class="day-name sun">日</div>
+                <div class="day-name">月</div>
+                <div class="day-name">火</div>
+                <div class="day-name">水</div>
+                <div class="day-name">木</div>
+                <div class="day-name">金</div>
+                <div class="day-name sat">土</div>
+            </div>
+            <div id="weekContainer"></div>
         </div>
-
-        <div class="calendar-scroll" id="calendarContainer"></div>
     </div>
 
-    <!-- Modal -->
-    <div class="modal-overlay" id="modalOverlay" onclick="closeModalOutside(event)">
+    <div class="modal-overlay" id="modalOverlay" onclick="window.app.closeModalOutside(event)">
         <div class="modal-sheet">
             <div class="modal-header">
                 <div class="modal-title" id="modalTitle">--</div>
-                <button class="btn-close" onclick="closeModal()">✕</button>
+                <button class="btn-close" onclick="window.app.closeModal()">✕</button>
             </div>
 
-            <div class="existing-events">
+            <div class="section">
                 <h3>📋 登録済みの予定</h3>
-                <div id="eventList"></div>
+                <div id="eventList" class="event-list"></div>
             </div>
 
             <div class="divider"></div>
 
-            <div class="add-form">
+            <div class="section">
                 <h3>➕ 新規予定</h3>
                 <div class="form-group">
                     <label>項目名</label>
-                    <input type="text" id="eventTitle" placeholder="例: 会議、予定など" maxlength="30">
+                    <input type="text" id="eventTitle" placeholder="例: 会議、打ち合わせ" maxlength="30">
                 </div>
                 <div class="form-group">
                     <label>内容（任意）</label>
                     <textarea id="eventBody" placeholder="詳細なメモを入力"></textarea>
                 </div>
-                <button class="btn-submit" onclick="addEvent()">登録</button>
+                <button class="btn-submit" onclick="window.app.addEvent()">登録</button>
             </div>
         </div>
     </div>
 
     <script>
-        // State
-        let events = JSON.parse(localStorage.getItem('schedule_data')) || {};
-        let currentCenterDate = new Date();
-        let renderedWeeks = new Set();
-        const SCROLL_THRESHOLD = 100;
+        window.app = (function() {
+            // State
+            let events = JSON.parse(localStorage.getItem('sched_events_v3')) || {};
+            let currentSunday = new Date();
+            let modalDateKey = null;
+            const WEEK_RANGE = 15; // 表示する週数（前後）
 
-        // DOM
-        const container = document.getElementById('calendarContainer');
-        const weekLabel = document.getElementById('weekLabel');
-        const modal = document.getElementById('modalOverlay');
-        const modalTitle = document.getElementById('modalTitle');
-        const eventListEl = document.getElementById('eventList');
-        const titleInput = document.getElementById('eventTitle');
-        const bodyInput = document.getElementById('eventBody');
-        let selectedDateKey = null;
+            // DOM
+            const els = {
+                wrapper: document.getElementById('scrollWrapper'),
+                container: document.getElementById('weekContainer'),
+                label: document.getElementById('weekLabel'),
+                modal: document.getElementById('modalOverlay'),
+                modalTitle: document.getElementById('modalTitle'),
+                eventList: document.getElementById('eventList'),
+                titleIn: document.getElementById('eventTitle'),
+                bodyIn: document.getElementById('eventBody')
+            };
 
-        // Utilities
-        const getMonday = (d) => {
-            const date = new Date(d);
-            const day = date.getDay();
-            //-6>-7
-            const diff = date.getDate() - day + (day === 0 ? -6 : 0);
-            date.setDate(diff);
-            date.setHours(0,0,0,0);
-            return date;
-        };
+            // Date Utils
+            const getSunday = (d) => {
+                const date = new Date(d);
+                date.setDate(date.getDate() - date.getDay());
+                date.setHours(0,0,0,0);
+                return date;
+            };
+            const formatDateKey = (d) => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+            const addDays = (d, n) => { const r = new Date(d); r.setDate(r.getDate() + n); return r; };
+            const isSameDay = (a, b) => a.toDateString() === b.toDateString();
+            const escapeHtml = (t) => { const d = document.createElement('div'); d.textContent = t; return d.innerHTML; };
+            const formatTime = (iso) => { if(!iso) return ''; const d=new Date(iso); return `${d.getHours().toString().padStart(2,'0')}:${d.getMinutes().toString().padStart(2,'0')}`; };
 
-        const formatDateKey = (d) => {
-            const y = d.getFullYear();
-            const m = String(d.getMonth() + 1).padStart(2, '0');
-            const dd = String(d.getDate()).padStart(2, '0');
-            return `${y}-${m}-${dd}`;
-        };
+            // Render
+            function renderWeeks() {
+                els.container.innerHTML = '';
+                const today = new Date(); today.setHours(0,0,0,0);
+                const base = getSunday(currentSunday);
+                
+                for(let i = -WEEK_RANGE; i <= WEEK_RANGE; i++) {
+                    const sunday = addDays(base, i * 7);
+                    const row = document.createElement('div');
+                    row.className = 'week-row';
+                    row.dataset.date = formatDateKey(sunday);
 
-        const addWeeks = (d, n) => {
-            const date = new Date(d);
-            date.setDate(date.getDate() + (n * 7));
-            return date;
-        };
+                    let html = '';
+                    for(let d = 0; d < 7; d++) {
+                        const dayDate = addDays(sunday, d);
+                        const key = formatDateKey(dayDate);
+                        const isToday = isSameDay(dayDate, today);
+                        const isSun = d === 0;
+                        const isSat = d === 6;
+                        const dayEvents = events[key] || [];
 
-        const isSameDay = (d1, d2) => d1.toDateString() === d2.toDateString();
+                        let pills = '';
+                        dayEvents.slice(0, 3).forEach(ev => {
+                            pills += `<div class="event-pill" onclick="event.stopPropagation(); app.openModal('${key}')">${escapeHtml(ev.title)}</div>`;
+                        });
+                        if(dayEvents.length > 3) pills += `<div class="event-more">+${dayEvents.length-3}</div>`;
 
-        const escapeHtml = (text) => {
-            const div = document.createElement('div');
-            div.textContent = text;
-            return div.innerHTML;
-        };
+                        html += `
+                            <div class="day-cell ${isToday?'today':''} ${isSun?'sun':''} ${isSat?'sat':''}" onclick="app.openModal('${key}')">
+                                <div class="day-num">${dayDate.getDate()}</div>
+                                <div class="day-events">${pills}</div>
+                            </div>
+                        `;
+                    }
+                    row.innerHTML = html;
+                    els.container.appendChild(row);
+                }
+                updateLabel();
+            }
 
-        const formatTime = (iso) => {
-            if (!iso) return '';
-            const d = new Date(iso);
-            return `${d.getHours().toString().padStart(2,'0')}:${d.getMinutes().toString().padStart(2,'0')}`;
-        };
+            function updateLabel() {
+                const end = addDays(currentSunday, 6);
+                els.label.textContent = `${currentSunday.getMonth()+1}月${currentSunday.getDate()}日 〜 ${end.getMonth()+1}月${end.getDate()}日`;
+            }
 
-        // Rendering
-        function renderWeek(weekStart) {
-            const key = formatDateKey(weekStart);
-            if (renderedWeeks.has(key)) return;
-            renderedWeeks.add(key);
+            function scrollToTarget(sunday) {
+                const target = els.container.querySelector(`.week-row[data-date="${formatDateKey(sunday)}"]`);
+                if(target) target.scrollIntoView({block: 'center', behavior: 'smooth'});
+            }
 
-            const row = document.createElement('div');
-            row.className = 'week-row';
-            row.dataset.date = key;
+            // Modal & Events
+            function openModal(dateKey) {
+                modalDateKey = dateKey;
+                const [y,m,d] = dateKey.split('-').map(Number);
+                els.modalTitle.textContent = `${y}年${m}月${d}日`;
+                renderEventList();
+                els.titleIn.value = '';
+                els.bodyIn.value = '';
+                els.modal.classList.add('active');
+            }
 
-            const today = new Date(); today.setHours(0,0,0,0);
-            const monthNames = ['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'];
+            function closeModal() { els.modal.classList.remove('active'); modalDateKey = null; }
+            function closeModalOutside(e) { if(e.target === els.modal) closeModal(); }
 
-            let html = '';
-            for (let i = 0; i < 7; i++) {
-                const day = new Date(weekStart);
-                day.setDate(day.getDate() + i);
-                const dKey = formatDateKey(day);
-                const isToday = isSameDay(day, today);
-                const isSun = i === 0;
-                const isSat = i === 6;
-                const dayEvents = events[dKey] || [];
-
-                let eventsHtml = '';
-                const maxShow = 3;
-                dayEvents.slice(0, maxShow).forEach(ev => {
-                    eventsHtml += `<div class="event-pill" onclick="event.stopPropagation(); openModal('${dKey}')">${escapeHtml(ev.title)}</div>`;
+            function renderEventList() {
+                const list = events[modalDateKey] || [];
+                els.eventList.innerHTML = '';
+                if(list.length === 0) {
+                    els.eventList.innerHTML = '<div class="empty-state">まだ予定がありません</div>';
+                    return;
+                }
+                list.forEach(ev => {
+                    const card = document.createElement('div');
+                    card.className = 'event-card';
+                    card.innerHTML = `
+                        <button class="btn-delete" onclick="app.deleteEvent('${modalDateKey}', '${ev.id}')" title="削除">✕</button>
+                        <div class="event-card-title">${escapeHtml(ev.title)}</div>
+                        ${ev.body ? `<div class="event-card-body">${escapeHtml(ev.body)}</div>` : ''}
+                        <div class="event-card-meta">登録: ${formatTime(ev.createdAt)}</div>
+                    `;
+                    els.eventList.appendChild(card);
                 });
-                if (dayEvents.length > maxShow) {
-                    eventsHtml += `<div class="event-more">+${dayEvents.length - maxShow}</div>`;
+            }
+
+            function addEvent() {
+                const title = els.titleIn.value.trim();
+                if(!title) { alert('項目名を入力してください'); return; }
+                
+                if(!events[modalDateKey]) events[modalDateKey] = [];
+                events[modalDateKey].push({
+                    id: Date.now().toString(),
+                    title,
+                    body: els.bodyIn.value.trim(),
+                    createdAt: new Date().toISOString()
+                });
+                
+                save();
+                renderEventList();
+                renderWeeks();
+                els.titleIn.value = '';
+                els.bodyIn.value = '';
+                els.titleIn.focus();
+            }
+
+            function deleteEvent(dateKey, id) {
+                if(!confirm('この予定を削除しますか？')) return;
+                if(events[dateKey]) {
+                    events[dateKey] = events[dateKey].filter(e => e.id !== id);
+                    if(events[dateKey].length === 0) delete events[dateKey];
+                    save();
+                    renderEventList(); // Refreshes modal list if still open
+                    renderWeeks(); // Refreshes calendar
                 }
-
-                html += `
-                    <div class="day-cell ${isToday ? 'today' : ''} ${isSun ? 'sun' : ''} ${isSat ? 'sat' : ''}" onclick="openModal('${dKey}')">
-                        <div class="day-num">${day.getDate()}</div>
-                        <div class="day-events">${eventsHtml}</div>
-                    </div>
-                `;
-            }
-            row.innerHTML = html;
-
-            // Insert in correct order
-            const existingRows = Array.from(container.children);
-            let inserted = false;
-            for (const r of existingRows) {
-                if (new Date(r.dataset.date) > weekStart) {
-                    container.insertBefore(row, r);
-                    inserted = true;
-                    break;
-                }
-            }
-            if (!inserted) container.appendChild(row);
-        }
-
-        function updateWeekLabel() {
-            const start = getMonday(currentCenterDate);
-            const end = new Date(start); end.setDate(end.getDate() + 6);
-            const m1 = start.getMonth()+1, d1 = start.getDate();
-            const m2 = end.getMonth()+1, d2 = end.getDate();
-            weekLabel.textContent = `${m1}月${d1}日 〜 ${m2}月${d2}日`;
-        }
-
-        function renderInitialWeeks() {
-            container.innerHTML = '';
-            renderedWeeks.clear();
-            const center = getMonday(currentCenterDate);
-            for (let i = -4; i <= 4; i++) {
-                renderWeek(addWeeks(center, i));
-            }
-            updateWeekLabel();
-            setTimeout(() => {
-                const target = document.querySelector(`.week-row[data-date="${formatDateKey(center)}"]`);
-                if (target) target.scrollIntoView({ block: 'center', behavior: 'smooth' });
-            }, 50);
-        }
-
-        // Navigation
-        function navWeek(dir) {
-            currentCenterDate = addWeeks(currentCenterDate, dir);
-            const center = getMonday(currentCenterDate);
-            
-            // Check if we need to load more
-            let needsMore = false;
-            const firstDate = new Date(Array.from(container.children)[0].dataset.date);
-            const lastDate = new Date(Array.from(container.children)[container.children.length-1].dataset.date);
-            
-            if (center < firstDate || center > addWeeks(lastDate, -7)) {
-                needsMore = true;
             }
 
-            if (needsMore) {
-                renderInitialWeeks(); // Simple reset for navigation
-            } else {
-                updateWeekLabel();
-                const target = document.querySelector(`.week-row[data-date="${formatDateKey(center)}"]`);
-                if (target) target.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
-            }
-        }
+            function save() { localStorage.setItem('sched_events_v3', JSON.stringify(events)); }
 
-        function goToToday() {
-            currentCenterDate = new Date();
-            renderInitialWeeks();
-        }
-
-        // Scroll Handling (Infinite Load)
-        container.addEventListener('scroll', () => {
-            const scrollTop = container.scrollTop;
-            const scrollBottom = container.scrollHeight - container.scrollTop - container.clientHeight;
-
-            if (scrollTop < SCROLL_THRESHOLD) {
-                const firstDate = new Date(Array.from(container.children)[0].dataset.date);
-                renderWeek(addWeeks(firstDate, -1));
-                container.scrollTop += 150; // Maintain scroll position
-            }
-            if (scrollBottom < SCROLL_THRESHOLD) {
-                const lastDate = new Date(Array.from(container.children)[container.children.length-1].dataset.date);
-                renderWeek(addWeeks(lastDate, 1));
-            }
-        });
-
-        // Modal & Events
-        function openModal(dateKey) {
-            selectedDateKey = dateKey;
-            const [y, m, d] = dateKey.split('-').map(Number);
-            modalTitle.textContent = `${y}年${m}月${d}日`;
-            titleInput.value = '';
-            bodyInput.value = '';
-            renderEventList();
-            modal.classList.add('active');
-        }
-
-        function closeModal() {
-            modal.classList.remove('active');
-            selectedDateKey = null;
-        }
-
-        function closeModalOutside(e) {
-            if (e.target === modal) closeModal();
-        }
-
-        function renderEventList() {
-            const list = events[selectedDateKey] || [];
-            eventListEl.innerHTML = '';
-            
-            if (list.length === 0) {
-                eventListEl.innerHTML = '<div class="empty-state">まだ予定がありません</div>';
-                return;
+            // Navigation
+            function navWeek(dir) {
+                currentSunday.setDate(currentSunday.getDate() + dir * 7);
+                renderWeeks();
+                setTimeout(() => {
+                    const target = els.container.querySelector('.week-row');
+                    if(target) target.scrollIntoView({block: 'start'});
+                }, 50);
             }
 
-            list.forEach(ev => {
-                const div = document.createElement('div');
-                div.className = 'event-card';
-                div.innerHTML = `
-                    <div class="event-card-title">${escapeHtml(ev.title)}</div>
-                    ${ev.body ? `<div class="event-card-body">${escapeHtml(ev.body)}</div>` : ''}
-                    <div class="event-card-meta">
-                        <span>登録: ${formatTime(ev.createdAt)}</span>
-                        <button class="btn-delete" onclick="deleteEvent('${ev.id}')">削除</button>
-                    </div>
-                `;
-                eventListEl.appendChild(div);
-            });
-        }
+            function goToToday() {
+                currentSunday = getSunday(new Date());
+                renderWeeks();
+                setTimeout(() => scrollToTarget(getSunday(new Date())), 100);
+            }
 
-        function addEvent() {
-            const title = titleInput.value.trim();
-            if (!title) { alert('項目名を入力してください'); return; }
+            // Init
+            function init() {
+                currentSunday = getSunday(new Date());
+                renderWeeks();
+                setTimeout(() => scrollToTarget(getSunday(new Date())), 200);
+            }
 
-            if (!events[selectedDateKey]) events[selectedDateKey] = [];
-            events[selectedDateKey].push({
-                id: Date.now().toString(),
-                title: title,
-                body: bodyInput.value.trim(),
-                createdAt: new Date().toISOString()
-            });
+            // Public API
+            return {
+                init, navWeek, goToToday, openModal, closeModal, closeModalOutside, addEvent, deleteEvent
+            };
+        })();
 
-            saveData();
-            renderEventList();
-            renderInitialWeeks(); // Refresh calendar UI
-            titleInput.value = '';
-            bodyInput.value = '';
-            titleInput.focus();
-        }
-
-        function deleteEvent(id) {
-            if (!confirm('この予定を削除しますか？')) return;
-            events[selectedDateKey] = events[selectedDateKey].filter(ev => ev.id !== id);
-            if (events[selectedDateKey].length === 0) delete events[selectedDateKey];
-            saveData();
-            renderEventList();
-            renderInitialWeeks();
-        }
-
-        function saveData() {
-            localStorage.setItem('schedule_data', JSON.stringify(events));
-        }
-
-        // Init
-        renderInitialWeeks();
+        // Start
+        window.app.init();
     </script>
 </body>
 </html>
