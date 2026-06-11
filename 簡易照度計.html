@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>簡易照度計</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/noto-sans-jp@5.0.17/400.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/noto-sans-jp@5.0.17/500.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/noto-sans-jp@5.0.17/700.css">
+    <style>
+        :root {
+            --bg: #0f172a;
+            --card: #1e293b;
+            --text: #f8fafc;
+            --text-sub: #94a3b8;
+            --border: #334155;
+            --gauge-bg: #334155;
+            --accent: #3b82f6;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; -webkit-tap-highlight-color: transparent; }
+        body {
+            font-family: 'Noto Sans JP', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 360px;
+            background: var(--card);
+            border-radius: 24px;
+            padding: 32px 24px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+            text-align: center;
+        }
+
+        h1 { font-size: 22px; font-weight: 700; margin-bottom: 24px; display: flex; align-items: center; justify-content: center; gap: 8px; }
+        
+        .gauge-wrapper {
+            position: relative;
+            width: 220px;
+            height: 220px;
+            margin: 0 auto 24px;
+        }
+
+        .gauge-svg {
+            width: 100%;
+            height: 100%;
+            transform: rotate(-90deg);
+        }
+
+        .gauge-track { fill: none; stroke: var(--gauge-bg); stroke-width: 12; }
+        .gauge-progress {
+            fill: none;
+            stroke: var(--accent);
+            stroke-width: 12;
+            stroke-linecap: round;
+            stroke-dasharray: 565.48; /* 2*PI*90 */
+            stroke-dashoffset: 565.48;
+            transition: stroke-dashoffset 0.4s cubic-bezier(0.4, 0, 0.2, 1), stroke 0.4s ease;
+        }
+
+        .center-display {
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+        }
+
+        .lux-value { font-size: 48px; font-weight: 700; line-height: 1; margin-bottom: 4px; font-variant-numeric: tabular-nums; }
+        .lux-unit { font-size: 14px; color: var(--text-sub); margin-bottom: 8px; }
+        .status-text { font-size: 15px; font-weight: 600; padding: 4px 12px; border-radius: 20px; background: rgba(255,255,255,0.05); }
+
+        .controls { display: flex; gap: 12px; margin-bottom: 20px; }
+        .btn {
+            flex: 1;
+            padding: 14px;
+            border: none;
+            border-radius: 12px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: inherit;
+        }
+        .btn-primary { background: var(--accent); color: #fff; box-shadow: 0 4px 12px rgba(59,130,246,0.3); }
+        .btn-primary:hover { background: #2563eb; }
+        .btn-primary:active { transform: scale(0.98); }
+        .btn-stop { background: #ef4444; color: #fff; box-shadow: 0 4px 12px rgba(239,68,68,0.3); display: none; }
+        .btn-stop:hover { background: #dc2626; }
+        .btn:disabled { opacity: 0.5; cursor: wait; }
+
+        .info-box {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 14px;
+            font-size: 12px;
+            color: var(--text-sub);
+            line-height: 1.6;
+            text-align: left;
+        }
+        .info-box strong { color: #e2e8f0; }
+        .hidden { display: none !important; }
+
+        video, canvas { display: none; }
+
+        @media (max-width: 400px) {
+            .container { padding: 24px 16px; }
+            .gauge-wrapper { width: 180px; height: 180px; }
+            .lux-value { font-size: 38px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>💡 簡易照度計</h1>
+
+        <div class="gauge-wrapper">
+            <svg class="gauge-svg" viewBox="0 0 200 200">
+                <circle class="gauge-track" cx="100" cy="100" r="90"></circle>
+                <circle class="gauge-progress" id="gaugeProgress" cx="100" cy="100" r="90"></circle>
+            </svg>
+            <div class="center-display">
+                <div class="lux-value" id="luxValue">--</div>
+                <div class="lux-unit">相対 lux</div>
+                <div class="status-text" id="statusText">待機中</div>
+            </div>
+        </div>
+
+        <div class="controls">
+            <button class="btn btn-primary" id="btnStart">📡 センサー開始</button>
+            <button class="btn btn-primary" id="btnCamera" style="display:none;">📷 カメラ計測</button>
+            <button class="btn btn-stop" id="btnStop">⏹ 停止</button>
+        </div>
+
+        <div class="info-box">
+            <strong>📝 計測モードについて</strong><br>
+            • 環境光センサー搭載端末：高精度な相対値を取得<br>
+            • カメラ代替：画面の輝度分析により相対比較可能<br>
+            • 精度は保証されませんが、机の明るさ比較等に活用できます<br>
+            <span style="color: #fbbf24;">※ カメラ計測時は端末の画面輝度を下げると精度が上がります</span>
+        </div>
+    </div>
+
+    <video id="video" autoplay playsinline muted></video>
+    <canvas id="canvas"></canvas>
+
+    <script>
+        // State
+        let sensor = null;
+        let videoStream = null;
+        let animFrameId = null;
+        let smoothLux = 0;
+        let isRunning = false;
+
+        // DOM
+        const els = {
+            lux: document.getElementById('luxValue'),
+            status: document.getElementById('statusText'),
+            gauge: document.getElementById('gaugeProgress'),
+            btnStart: document.getElementById('btnStart'),
+            btnCamera: document.getElementById('btnCamera'),
+            btnStop: document.getElementById('btnStop'),
+            video: document.getElementById('video'),
+            canvas: document.getElementById('canvas')
+        };
+
+        const ctx = els.canvas.getContext('2d', { willReadFrequently: true });
+        const circumference = 2 * Math.PI * 90;
+
+        // UI Update
+        function updateGauge(lux) {
+            // Exponential smoothing for stable display
+            smoothLux = smoothLux * 0.8 + lux * 0.2;
+            const displayLux = Math.round(smoothLux);
+            els.lux.textContent = displayLux;
+
+            // Gauge progress (0-1000 maps to 0-100%)
+            const progress = Math.min(displayLux / 1000, 1);
+            els.gauge.style.strokeDashoffset = circumference * (1 - progress);
+
+            // Color & Status logic
+            let color, label;
+            if (displayLux < 50) {
+                color = '#64748b'; label = '🌙 暗い (読書不可)';
+            } else if (displayLux < 300) {
+                color = '#3b82f6'; label = '🌅 薄暗い';
+            } else if (displayLux < 800) {
+                color = '#10b981'; label = '☀️ 普通 (作業適正)';
+            } else {
+                color = '#f59e0b'; label = '🔆 明るい';
+            }
+
+            els.gauge.style.stroke = color;
+            els.status.textContent = label;
+            els.status.style.color = color;
+            els.status.style.borderColor = color;
+        }
+
+        function resetUI() {
+            smoothLux = 0;
+            els.lux.textContent = '--';
+            els.status.textContent = '待機中';
+            els.status.style.color = '';
+            els.status.style.borderColor = '';
+            els.gauge.style.stroke = 'var(--accent)';
+            els.gauge.style.strokeDashoffset = circumference;
+            els.btnStart.style.display = 'flex';
+            els.btnCamera.style.display = 'flex';
+            els.btnStop.style.display = 'none';
+            isRunning = false;
+        }
+
+        // Ambient Light Sensor
+        function startSensor() {
+            try {
+                sensor = new AmbientLightSensor({ frequency: 2 });
+                sensor.addEventListener('reading', () => {
+                    const val = sensor.illuminance || 0;
+                    updateGauge(val);
+                });
+                sensor.addEventListener('error', (e) => {
+                    console.warn('Sensor Error:', e.error.message);
+                    stopAll();
+                    els.status.textContent = '⚠️ センサーエラー';
+                    els.btnCamera.style.display = 'flex';
+                });
+                sensor.start();
+                setRunningState();
+            } catch (e) {
+                console.warn('Sensor unavailable:', e);
+                els.btnStart.style.display = 'none';
+                els.btnCamera.style.display = 'flex';
+                els.status.textContent = 'センサー未対応';
+            }
+        }
+
+        // Camera Fallback
+        async function startCamera() {
+            try {
+                videoStream = await navigator.mediaDevices.getUserMedia({
+                    video: { facingMode: 'environment', width: { ideal: 320 }, height: { ideal: 240 } }
+                });
+                els.video.srcObject = videoStream;
+                await els.video.play();
+                
+                els.canvas.width = 60;
+                els.canvas.height = 60;
+                setRunningState();
+                processFrame();
+            } catch (e) {
+                els.status.textContent = '⚠️ カメラ許可エラー';
+                console.error(e);
+            }
+        }
+
+        function processFrame() {
+            if (!isRunning) return;
+            ctx.drawImage(els.video, 0, 0, 60, 60);
+            const frame = ctx.getImageData(0, 0, 60, 60);
+            let totalLum = 0;
+            const len = frame.data.length;
+
+            for (let i = 0; i < len; i += 4) {
+                // Rec. 709 luminance formula
+                totalLum += (frame.data[i] * 0.2126 + frame.data[i+1] * 0.7152 + frame.data[i+2] * 0.0722);
+            }
+            const avgLum = totalLum / (len / 4); // 0-255
+            // Map to relative lux scale 0-1000
+            const relLux = (avgLum / 255) * 1000;
+            updateGauge(relLux);
+            animFrameId = requestAnimationFrame(processFrame);
+        }
+
+        // Controls
+        function setRunningState() {
+            isRunning = true;
+            els.btnStart.style.display = 'none';
+            els.btnCamera.style.display = 'none';
+            els.btnStop.style.display = 'flex';
+        }
+
+        function stopAll() {
+            isRunning = false;
+            if (sensor) { sensor.stop(); sensor = null; }
+            if (videoStream) { videoStream.getTracks().forEach(t => t.stop()); videoStream = null; }
+            if (animFrameId) cancelAnimationFrame(animFrameId);
+            resetUI();
+        }
+
+        // Event Listeners
+        els.btnStart.onclick = startSensor;
+        els.btnCamera.onclick = startCamera;
+        els.btnStop.onclick = stopAll;
+
+        // Init Detection
+        if (!('AmbientLightSensor' in window)) {
+            els.btnStart.style.display = 'none';
+            els.btnCamera.style.display = 'flex';
+            els.btnCamera.textContent = '📷 カメラ計測を開始';
+        } else {
+            els.btnStart.textContent = '📡 環境光センサー開始';
+        }
+    </script>
+</body>
+</html>
+
