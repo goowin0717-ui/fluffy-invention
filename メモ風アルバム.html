@@ -251,7 +251,7 @@
     </div>
 
     <script>
-        let memos = JSON.parse(localStorage.getItem('memos_rich_v2')) || [];
+        let memos = JSON.parse(localStorage.getItem('memos_rich_v3')) || [];
         let editingId = null;
         let deletingId = null;
 
@@ -312,7 +312,7 @@
 
         // Save & Render
         function saveToStorage() {
-            localStorage.setItem('memos_rich_v2', JSON.stringify(memos));
+            localStorage.setItem('memos_rich_v3', JSON.stringify(memos));
         }
 
         function renderMemos(filterText = '') {
