@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>簡易照度計</title>
+    <title>簡易照度計（インカメラ対応）</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/noto-sans-jp@5.0.17/400.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/noto-sans-jp@5.0.17/500.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/noto-sans-jp@5.0.17/700.css">
@@ -16,6 +16,9 @@
             --border: #334155;
             --gauge-bg: #334155;
             --accent: #3b82f6;
+            --accent-hover: #2563eb;
+            --danger: #ef4444;
+            --success: #10b981;
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; -webkit-tap-highlight-color: transparent; }
@@ -32,29 +35,27 @@
 
         .container {
             width: 100%;
-            max-width: 360px;
+            max-width: 380px;
             background: var(--card);
             border-radius: 24px;
-            padding: 32px 24px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+            padding: 28px 20px;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.3);
             text-align: center;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
         }
 
-        h1 { font-size: 22px; font-weight: 700; margin-bottom: 24px; display: flex; align-items: center; justify-content: center; gap: 8px; }
+        h1 { font-size: 22px; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 8px; color: var(--text); }
         
         .gauge-wrapper {
             position: relative;
             width: 220px;
             height: 220px;
-            margin: 0 auto 24px;
+            margin: 0 auto;
         }
 
-        .gauge-svg {
-            width: 100%;
-            height: 100%;
-            transform: rotate(-90deg);
-        }
-
+        .gauge-svg { width: 100%; height: 100%; transform: rotate(-90deg); }
         .gauge-track { fill: none; stroke: var(--gauge-bg); stroke-width: 12; }
         .gauge-progress {
             fill: none;
@@ -71,49 +72,66 @@
             top: 50%; left: 50%;
             transform: translate(-50%, -50%);
             text-align: center;
+            width: 100%;
         }
 
-        .lux-value { font-size: 48px; font-weight: 700; line-height: 1; margin-bottom: 4px; font-variant-numeric: tabular-nums; }
-        .lux-unit { font-size: 14px; color: var(--text-sub); margin-bottom: 8px; }
-        .status-text { font-size: 15px; font-weight: 600; padding: 4px 12px; border-radius: 20px; background: rgba(255,255,255,0.05); }
+        .lux-value { font-size: 46px; font-weight: 700; line-height: 1; margin-bottom: 4px; font-variant-numeric: tabular-nums; }
+        .lux-unit { font-size: 13px; color: var(--text-sub); margin-bottom: 6px; letter-spacing: 1px; }
+        .status-text { 
+            font-size: 14px; font-weight: 600; padding: 6px 12px; border-radius: 20px; 
+            background: rgba(255,255,255,0.05); display: inline-block;
+            border: 1px solid transparent;
+        }
 
-        .controls { display: flex; gap: 12px; margin-bottom: 20px; }
+        .controls { display: flex; flex-direction: column; gap: 10px; }
+        .control-row { display: flex; gap: 10px; }
+
         .btn {
             flex: 1;
-            padding: 14px;
+            padding: 14px 10px;
             border: none;
             border-radius: 12px;
-            font-size: 15px;
+            font-size: 14px;
             font-weight: 600;
             cursor: pointer;
             transition: all 0.2s;
             font-family: inherit;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
         }
+        
         .btn-primary { background: var(--accent); color: #fff; box-shadow: 0 4px 12px rgba(59,130,246,0.3); }
-        .btn-primary:hover { background: #2563eb; }
-        .btn-primary:active { transform: scale(0.98); }
-        .btn-stop { background: #ef4444; color: #fff; box-shadow: 0 4px 12px rgba(239,68,68,0.3); display: none; }
+        .btn-primary:hover { background: var(--accent-hover); }
+        .btn-stop { background: var(--danger); color: #fff; box-shadow: 0 4px 12px rgba(239,68,68,0.3); }
         .btn-stop:hover { background: #dc2626; }
+        .btn-switch { background: var(--border); color: var(--text); box-shadow: 0 2px 8px rgba(0,0,0,0.2); }
+        .btn-switch:hover { background: #475569; }
+        
+        .btn:active { transform: scale(0.98); }
         .btn:disabled { opacity: 0.5; cursor: wait; }
 
         .info-box {
-            background: rgba(255,255,255,0.05);
+            background: rgba(255,255,255,0.03);
             border: 1px solid var(--border);
             border-radius: 12px;
-            padding: 14px;
-            font-size: 12px;
+            padding: 12px;
+            font-size: 11px;
             color: var(--text-sub);
-            line-height: 1.6;
+            line-height: 1.5;
             text-align: left;
+            margin-top: auto;
         }
-        .info-box strong { color: #e2e8f0; }
-        .hidden { display: none !important; }
+        .info-box strong { color: #e2e8f0; display: block; margin-bottom: 4px; font-size: 12px; }
+        .info-box ul { padding-left: 18px; margin: 4px 0; }
+        .info-box li { margin-bottom: 2px; }
 
         video, canvas { display: none; }
 
         @media (max-width: 400px) {
-            .container { padding: 24px 16px; }
-            .gauge-wrapper { width: 180px; height: 180px; }
+            .container { padding: 20px 16px; }
+            .gauge-wrapper { width: 190px; height: 190px; }
             .lux-value { font-size: 38px; }
         }
     </style>
@@ -124,6 +142,12 @@
 
         <div class="gauge-wrapper">
             <svg class="gauge-svg" viewBox="0 0 200 200">
+                <defs>
+                    <linearGradient id="gaugeGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stop-color="#3b82f6"/>
+                        <stop offset="100%" stop-color="#10b981"/>
+                    </linearGradient>
+                </defs>
                 <circle class="gauge-track" cx="100" cy="100" r="90"></circle>
                 <circle class="gauge-progress" id="gaugeProgress" cx="100" cy="100" r="90"></circle>
             </svg>
@@ -135,17 +159,26 @@
         </div>
 
         <div class="controls">
-            <button class="btn btn-primary" id="btnStart">📡 センサー開始</button>
-            <button class="btn btn-primary" id="btnCamera" style="display:none;">📷 カメラ計測</button>
-            <button class="btn btn-stop" id="btnStop">⏹ 停止</button>
+            <!-- Start Buttons -->
+            <div class="control-row" id="startControls">
+                <button class="btn btn-primary" id="btnBack">📷 背面カメラ</button>
+                <button class="btn btn-primary" id="btnFront">📸 インカメラ</button>
+            </div>
+            
+            <!-- Active Buttons -->
+            <div class="control-row hidden" id="activeControls">
+                <button class="btn btn-switch" id="btnSwitch">🔄 カメラ切替</button>
+                <button class="btn btn-stop" id="btnStop">⏹ 停止</button>
+            </div>
         </div>
 
         <div class="info-box">
-            <strong>📝 計測モードについて</strong><br>
-            • 環境光センサー搭載端末：高精度な相対値を取得<br>
-            • カメラ代替：画面の輝度分析により相対比較可能<br>
-            • 精度は保証されませんが、机の明るさ比較等に活用できます<br>
-            <span style="color: #fbbf24;">※ カメラ計測時は端末の画面輝度を下げると精度が上がります</span>
+            <strong>📝 利用ガイド</strong>
+            <ul>
+                <li><strong>インカメラ:</strong> 机に置いた画面の輝度を計測。手元の明るさ比較に。</li>
+                <li><strong>背面カメラ:</strong> 外部の光を向けて計測。窓際の明るさ比較に。</li>
+                <li>精度は保証されませんが、相対的な「暗い・明るい」の判定に便利です。</li>
+            </ul>
         </div>
     </div>
 
@@ -154,19 +187,22 @@
 
     <script>
         // State
-        let sensor = null;
         let videoStream = null;
         let animFrameId = null;
         let smoothLux = 0;
         let isRunning = false;
+        let currentFacingMode = 'environment'; // 'user' or 'environment'
 
-        // DOM
+        // DOM Elements
         const els = {
             lux: document.getElementById('luxValue'),
             status: document.getElementById('statusText'),
             gauge: document.getElementById('gaugeProgress'),
-            btnStart: document.getElementById('btnStart'),
-            btnCamera: document.getElementById('btnCamera'),
+            startControls: document.getElementById('startControls'),
+            activeControls: document.getElementById('activeControls'),
+            btnFront: document.getElementById('btnFront'),
+            btnBack: document.getElementById('btnBack'),
+            btnSwitch: document.getElementById('btnSwitch'),
             btnStop: document.getElementById('btnStop'),
             video: document.getElementById('video'),
             canvas: document.getElementById('canvas')
@@ -177,8 +213,8 @@
 
         // UI Update
         function updateGauge(lux) {
-            // Exponential smoothing for stable display
-            smoothLux = smoothLux * 0.8 + lux * 0.2;
+            // Exponential smoothing
+            smoothLux = smoothLux * 0.85 + lux * 0.15;
             const displayLux = Math.round(smoothLux);
             els.lux.textContent = displayLux;
 
@@ -186,7 +222,7 @@
             const progress = Math.min(displayLux / 1000, 1);
             els.gauge.style.strokeDashoffset = circumference * (1 - progress);
 
-            // Color & Status logic
+            // Color & Status
             let color, label;
             if (displayLux < 50) {
                 color = '#64748b'; label = '🌙 暗い (読書不可)';
@@ -201,7 +237,7 @@
             els.gauge.style.stroke = color;
             els.status.textContent = label;
             els.status.style.color = color;
-            els.status.style.borderColor = color;
+            els.status.style.borderColor = `${color}40`;
         }
 
         function resetUI() {
@@ -212,101 +248,116 @@
             els.status.style.borderColor = '';
             els.gauge.style.stroke = 'var(--accent)';
             els.gauge.style.strokeDashoffset = circumference;
-            els.btnStart.style.display = 'flex';
-            els.btnCamera.style.display = 'flex';
-            els.btnStop.style.display = 'none';
+            
+            els.startControls.classList.remove('hidden');
+            els.activeControls.classList.add('hidden');
+            els.btnFront.disabled = false;
+            els.btnBack.disabled = false;
             isRunning = false;
         }
 
-        // Ambient Light Sensor
-        function startSensor() {
-            try {
-                sensor = new AmbientLightSensor({ frequency: 2 });
-                sensor.addEventListener('reading', () => {
-                    const val = sensor.illuminance || 0;
-                    updateGauge(val);
-                });
-                sensor.addEventListener('error', (e) => {
-                    console.warn('Sensor Error:', e.error.message);
-                    stopAll();
-                    els.status.textContent = '⚠️ センサーエラー';
-                    els.btnCamera.style.display = 'flex';
-                });
-                sensor.start();
-                setRunningState();
-            } catch (e) {
-                console.warn('Sensor unavailable:', e);
-                els.btnStart.style.display = 'none';
-                els.btnCamera.style.display = 'flex';
-                els.status.textContent = 'センサー未対応';
-            }
+        function setActiveUI() {
+            isRunning = true;
+            els.startControls.classList.add('hidden');
+            els.activeControls.classList.remove('hidden');
+            els.btnFront.disabled = true;
+            els.btnBack.disabled = true;
+            
+            const camType = currentFacingMode === 'user' ? 'インカメラ' : '背面カメラ';
+            els.status.textContent = `${camType}計測中`;
         }
 
-        // Camera Fallback
+        // Camera Logic
         async function startCamera() {
+            if (isRunning) return; // Already running
+
             try {
+                // Stop any existing stream
+                if (videoStream) {
+                    videoStream.getTracks().forEach(t => t.stop());
+                    videoStream = null;
+                }
+
+                els.status.textContent = 'カメラ起動中...';
+                
                 videoStream = await navigator.mediaDevices.getUserMedia({
-                    video: { facingMode: 'environment', width: { ideal: 320 }, height: { ideal: 240 } }
+                    video: { facingMode: currentFacingMode, width: { ideal: 320 }, height: { ideal: 240 } }
                 });
                 els.video.srcObject = videoStream;
                 await els.video.play();
                 
                 els.canvas.width = 60;
                 els.canvas.height = 60;
-                setRunningState();
+                
+                setActiveUI();
                 processFrame();
             } catch (e) {
-                els.status.textContent = '⚠️ カメラ許可エラー';
                 console.error(e);
+                els.status.textContent = '⚠️ カメラ起動エラー';
+                setTimeout(resetUI, 2000);
             }
         }
 
         function processFrame() {
             if (!isRunning) return;
-            ctx.drawImage(els.video, 0, 0, 60, 60);
-            const frame = ctx.getImageData(0, 0, 60, 60);
-            let totalLum = 0;
-            const len = frame.data.length;
+            
+            try {
+                ctx.drawImage(els.video, 0, 0, 60, 60);
+                const frame = ctx.getImageData(0, 0, 60, 60);
+                let totalLum = 0;
+                const len = frame.data.length;
 
-            for (let i = 0; i < len; i += 4) {
                 // Rec. 709 luminance formula
-                totalLum += (frame.data[i] * 0.2126 + frame.data[i+1] * 0.7152 + frame.data[i+2] * 0.0722);
+                for (let i = 0; i < len; i += 4) {
+                    totalLum += (frame.data[i] * 0.2126 + frame.data[i+1] * 0.7152 + frame.data[i+2] * 0.0722);
+                }
+                const avgLum = totalLum / (len / 4); 
+                const relLux = (avgLum / 255) * 1000; // Map 0-255 to 0-1000
+                updateGauge(relLux);
+            } catch (e) {
+                console.warn(e);
             }
-            const avgLum = totalLum / (len / 4); // 0-255
-            // Map to relative lux scale 0-1000
-            const relLux = (avgLum / 255) * 1000;
-            updateGauge(relLux);
+            
             animFrameId = requestAnimationFrame(processFrame);
-        }
-
-        // Controls
-        function setRunningState() {
-            isRunning = true;
-            els.btnStart.style.display = 'none';
-            els.btnCamera.style.display = 'none';
-            els.btnStop.style.display = 'flex';
         }
 
         function stopAll() {
             isRunning = false;
-            if (sensor) { sensor.stop(); sensor = null; }
-            if (videoStream) { videoStream.getTracks().forEach(t => t.stop()); videoStream = null; }
             if (animFrameId) cancelAnimationFrame(animFrameId);
+            if (videoStream) {
+                videoStream.getTracks().forEach(t => t.stop());
+                videoStream = null;
+            }
             resetUI();
         }
 
-        // Event Listeners
-        els.btnStart.onclick = startSensor;
-        els.btnCamera.onclick = startCamera;
-        els.btnStop.onclick = stopAll;
+        function switchCamera() {
+            if (!isRunning) return;
+            currentFacingMode = currentFacingMode === 'environment' ? 'user' : 'environment';
+            startCamera();
+        }
 
-        // Init Detection
-        if (!('AmbientLightSensor' in window)) {
-            els.btnStart.style.display = 'none';
-            els.btnCamera.style.display = 'flex';
-            els.btnCamera.textContent = '📷 カメラ計測を開始';
-        } else {
-            els.btnStart.textContent = '📡 環境光センサー開始';
+        // Event Listeners
+        els.btnFront.onclick = () => {
+            currentFacingMode = 'user';
+            startCamera();
+        };
+        
+        els.btnBack.onclick = () => {
+            currentFacingMode = 'environment';
+            startCamera();
+        };
+
+        els.btnStop.onclick = stopAll;
+        els.btnSwitch.onclick = switchCamera;
+
+        // Initial Check (optional UI state adjustment if camera is missing)
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+            els.btnFront.textContent = 'カメラ非対応';
+            els.btnBack.textContent = 'カメラ非対応';
+            els.btnFront.disabled = true;
+            els.btnBack.disabled = true;
+            els.status.textContent = '⚠️ ブラウザ非対応';
         }
     </script>
 </body>
