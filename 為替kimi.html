@@ -1,5 +1,4 @@
-
-forex_html = '''<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
@@ -248,6 +247,7 @@ forex_html = '''<!DOCTYPE html>
         var ctx = canvas.getContext('2d');
 
         var historyData = [];
+        　   historyData.length = 0;
         var currentRate = null;
         var previousRate = null;
         var dpr = window.devicePixelRatio || 1;
@@ -440,7 +440,7 @@ forex_html = '''<!DOCTYPE html>
 
                     historyData = [];
                     var dates = Object.keys(data.rates).sort();
-                    for (var i = 0; i < dates.length; i++) {
+                    for (var i = 0; i by< dates.length; i++) {
                         var date = dates[i];
                         var rate = data.rates[date]['JPY'];
                         historyData.push({ date: date, rate: rate });
@@ -478,9 +478,4 @@ forex_html = '''<!DOCTYPE html>
     })();
     </script>
 </body>
-</html>'''
-
-with open('/mnt/agents/output/usd_jpy_forex.html', 'w', encoding='utf-8') as f:
-    f.write(forex_html)
-
-print("ドル円為替レートWEBアプリを修正しました！")
+</html>
