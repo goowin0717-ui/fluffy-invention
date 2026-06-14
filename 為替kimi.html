@@ -61,7 +61,6 @@
             font-weight: 700;
             letter-spacing: -1px;
             line-height: 1.1;
-            min-height: 58px;
         }
         .rate-unit {
             color: #00d9ff;
@@ -73,7 +72,6 @@
             margin-top: 12px;
             font-size: 16px;
             font-weight: 600;
-            min-height: 24px;
         }
         .rate-change.up { color: #00ff88; }
         .rate-change.down { color: #ff4757; }
@@ -117,7 +115,6 @@
         #chart {
             width: 100%;
             height: 180px;
-            display: block;
         }
         .refresh-btn {
             width: 100%;
@@ -143,7 +140,6 @@
             transform: translateY(0);
         }
         .refresh-btn.spinning .icon {
-            display: inline-block;
             animation: spin 1s linear infinite;
         }
         @keyframes spin {
@@ -247,10 +243,8 @@
         var ctx = canvas.getContext('2d');
 
         var historyData = [];
-        　   historyData.length = 0;
         var currentRate = null;
         var previousRate = null;
-        var dpr = window.devicePixelRatio || 1;
 
         function showError(msg) {
             errorMsg.textContent = msg;
@@ -271,7 +265,7 @@
         }
 
         function formatDate(dateStr) {
-            var d = new Date(dateStr + 'T00:00:00');
+            var d = new Date(dateStr);
             return (d.getMonth() + 1) + '/' + d.getDate();
         }
 
@@ -281,26 +275,19 @@
         }
 
         function drawChart() {
-            // Canvasの論理サイズを取得
-            var rect = canvas.getBoundingClientRect();
-            var w = Math.floor(rect.width);
-            var h = Math.floor(rect.height);
-
-            // Canvasの実際のピクセルサイズをDPRに合わせて設定
-            canvas.width = w * dpr;
-            canvas.height = h * dpr;
-
-            // コンテキストをリセットしてからscale
-            ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+            var w = canvas.offsetWidth;
+            var h = canvas.offsetHeight;
+            canvas.width = w * 2;
+            canvas.height = h * 2;
+            ctx.scale(2, 2);
+            w = canvas.offsetWidth;
+            h = canvas.offsetHeight;
 
             ctx.clearRect(0, 0, w, h);
 
             if (historyData.length < 2) return;
 
-            var values = [];
-            for (var i = 0; i < historyData.length; i++) {
-                values.push(historyData[i].rate);
-            }
+            var values = historyData.map(function(d) { return d.rate; });
             var min = Math.min.apply(null, values);
             var max = Math.max.apply(null, values);
             var range = max - min || 1;
@@ -333,8 +320,6 @@
             }
             ctx.strokeStyle = '#00d9ff';
             ctx.lineWidth = 2.5;
-            ctx.lineJoin = 'round';
-            ctx.lineCap = 'round';
             ctx.stroke();
 
             // 塗りつぶし
@@ -354,15 +339,14 @@
                 ctx.fill();
             }
 
-            // X軸ラベル
+            // X軸ラベル（5つ程度）
             ctx.fillStyle = '#8888aa';
             ctx.font = '10px sans-serif';
             ctx.textAlign = 'center';
-            ctx.textBaseline = 'top';
             var step = Math.ceil(historyData.length / 5);
             for (var i = 0; i < historyData.length; i += step) {
                 var x = padding + (chartW / (historyData.length - 1)) * i;
-                ctx.fillText(formatDate(historyData[i].date), x, h - padding + 6);
+                ctx.fillText(formatDate(historyData[i].date), x, h - 8);
             }
         }
 
@@ -395,10 +379,7 @@
             changePercent.style.color = pct >= 0 ? '#00ff88' : '#ff4757';
 
             if (historyData.length > 0) {
-                var values = [];
-                for (var i = 0; i < historyData.length; i++) {
-                    values.push(historyData[i].rate);
-                }
+                var values = historyData.map(function(d) { return d.rate; });
                 high30.textContent = formatNumber(Math.max.apply(null, values), 2);
                 low30.textContent = formatNumber(Math.min.apply(null, values), 2);
             }
@@ -411,16 +392,14 @@
                 String(now.getMinutes()).padStart(2, '0') + ':' +
                 String(now.getSeconds()).padStart(2, '0');
 
-            // レイアウトが確定してから描画
-            requestAnimationFrame(function() {
-                drawChart();
-            });
+            drawChart();
         }
 
         window.fetchData = function() {
             setLoading(true);
             hideError();
 
+            // 直近30日分のデータを取得
             var endDate = new Date();
             var startDate = new Date();
             startDate.setDate(startDate.getDate() - 30);
@@ -440,7 +419,7 @@
 
                     historyData = [];
                     var dates = Object.keys(data.rates).sort();
-                    for (var i = 0; i by< dates.length; i++) {
+                    for (var i = 0; i < dates.length; i++) {
                         var date = dates[i];
                         var rate = data.rates[date]['JPY'];
                         historyData.push({ date: date, rate: rate });
@@ -460,15 +439,6 @@
                     setLoading(false);
                 });
         };
-
-        // ウィンドウリサイズ時に再描画
-        var resizeTimer;
-        window.addEventListener('resize', function() {
-            clearTimeout(resizeTimer);
-            resizeTimer = setTimeout(function() {
-                drawChart();
-            }, 150);
-        });
 
         // 初回取得
         fetchData();
