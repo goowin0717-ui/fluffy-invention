@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <title>templete-base</title>
+    
+    
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <style>
+    .btn-ok { padding: 5px 5px; border: none; border-radius: 10px; background:#6666FF; color: #fff; font-weight: 600; font-size:1.1em; width:5em;}
+    
+     </style>
+    
+    
+  </head>
+  <body>
+  
+    <div>
+     <p id="mes" >push button</p>
+     <button class="btn-ok"id="btn1">push</button>
+    </div>
+  
+  
+  <script>
+  
+   document.getElementById("btn1").addEventListener("click", function() {
+    
+    localStorage.setItem("pwd", '');
+    
+    let password =  localStorage.getItem("pwd");
+    
+    
+    document.getElementById("mes").textContent =
+        "【リセットしました】";
+    
+    
+     });
+  
+  
+  
+  </script>
+
+  </body>
+</html>
