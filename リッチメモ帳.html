@@ -251,6 +251,23 @@
     </div>
 
     <script>
+
+　　　//トークンチェック(始まり)
+　　　//(tokencheck.htmlへジャンプ)
+
+　　　　const savedtoken = localStorage.getItem("token");
+　
+    if (!savedtoken) {
+    //トークン入力ページへ
+        window.location.href = "tokencheck.html";
+       }
+ 
+     const  tokendt= '';
+           localStorage.setItem("token", tokendt);
+         
+
+　　　　//トークンチェック(終わり)
+
         let memos = JSON.parse(localStorage.getItem('memos_rich_v2')) || [];
         let editingId = null;
         let deletingId = null;

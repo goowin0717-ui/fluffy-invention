@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <title>templete-base</title>
+    
+    
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <style>
+    .inputbox {
+    border: 1px solid #0a0;  /* 枠線 */
+    border-radius: 0.67em;   /* 角丸 */
+    padding: 0.1em;          /* 内側の余白量 */
+    background-color: #FFFFCC;  /* 背景色 */
+    font-size: 1em;          /* 文字サイズ */
+    line-height: 1.0;        /* 行の高さ */
+}
+
+
+ .btn-ok { padding: 5px 5px; border: none; border-radius: 10px; background:#6666FF; color: #fff; font-weight: 600; font-size:1.1em; width:5em;}
+    
+     </style>
+    
+    
+  </head>
+  <body>
+  <div id="login" style="display:block">
+  <p>パスワードを入力してください</p>
+  <input class="inputbox" type="password" id="pw">
+  <button class="btn-ok" id="btn">OK</button>
+</div>
+  
+  <script>
+  
+  const date = new Date();
+  const str = date.getFullYear()
+    + '/' + ('0' + (date.getMonth() + 1)).slice(-2)
+    + '/' + ('0' + date.getDate()).slice(-2)
+    + ' ' + ('0' + date.getHours()).slice(-2)
+    + ':' + ('0' + date.getMinutes()).slice(-2)
+    + ':' + ('0' + date.getSeconds()).slice(-2)
+    + '(JST)';
+    
+    /* alert(str); */
+  
+  const token = String(date.getDate())+String(date.getHours());
+  
+    /* alert(token); */
+    
+    //check
+    
+    document.getElementById("btn").addEventListener("click", function() {
+    
+    const pw= document.getElementById("pw").value;
+    
+    let password =  token;
+    
+    
+    if (pw === password) {
+      document.getElementById("login").style.display = "none";
+      
+
+
+　　//ジャンプ元へ戻る
+         const tokendt = '###';
+         localStorage.setItem("token", tokendt);
+　　　window.location.href = "リッチメモ帳.html";
+
+
+    } else {
+      alert("パスワードが違います");
+    }
+  });
+
+
+
+  
+  
+  </script>
+
+  </body>
+</html>
