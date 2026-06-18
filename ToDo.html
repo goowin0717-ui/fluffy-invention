@@ -10,7 +10,8 @@
     <style>
         :root {
             --bg-gradient: linear-gradient(135deg, #e0c3fc 0%, #8ec5fc 100%);
-            --card-bg: #ffffff;
+           /*  --card-bg: #ffffff; */
+            --card-bg: lime;
             --primary: #6c5ce7;
             --primary-hover: #5649c0;
             --text-main: #2d3436;
@@ -375,6 +376,30 @@
     </div>
 
     <script>
+
+
+
+　　　//トークンチェック(始まり)
+　　　//(tokencheck.htmlへジャンプ)
+
+　　　　const savedtoken = localStorage.getItem("token");
+　
+    if (!savedtoken) {
+    //トークン入力ページへ
+        window.location.href = "tokencheck.html";
+       }
+ 
+     const  tokendt= '';
+           localStorage.setItem("token", tokendt);
+         
+
+　　　　//トークンチェック(終わり)
+
+
+
+
+
+
         // State
         let tasks = JSON.parse(localStorage.getItem('todo_tasks_v2')) || [];
 

@@ -151,9 +151,10 @@
 
         .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
         .modal-title { font-size: 18px; font-weight: 700; }
+        //w&h:28px>35px、background:#f1f5f9>lime、color:#64748b> black
         .btn-close {
-            width: 28px; height: 28px; border: none; background: #f1f5f9; border-radius: 6px;
-            cursor: pointer; display: flex; align-items: center; justify-content: center; color: #64748b; transition: 0.2s;
+            width: 35px; height: 35px; border: none; background: lime; border-radius: 6px;
+            cursor: pointer; display: flex; align-items: center; justify-content: center; color:black; transition: 0.2s;
         }
         .btn-close:hover { background: #e2e8f0; }
 
@@ -201,10 +202,11 @@
     </style>
 </head>
 <body>
+
     <div class="app-container">
         <header class="header">
             <div class="header-top">
-                <h1>📅 スケジュール帳</h1>
+                <h1>スケジュール帳(v2)</h1>
                 <button class="btn-today" onclick="window.app.goToToday()">今日へ</button>
             </div>
             <div class="nav-controls">
@@ -227,7 +229,8 @@
             <div id="weekContainer"></div>
         </div>
     </div>
-
+　
+　
     <div class="modal-overlay" id="modalOverlay" onclick="window.app.closeModalOutside(event)">
         <div class="modal-sheet">
             <div class="modal-header">
@@ -258,6 +261,30 @@
     </div>
 
     <script>
+
+
+
+　　　//トークンチェック(始まり)
+　　　//(tokencheck.htmlへジャンプ)
+
+　　　　const savedtoken = localStorage.getItem("token");
+　
+    if (!savedtoken) {
+    //トークン入力ページへ
+        window.location.href = "tokencheck.html";
+       }
+ 
+     const  tokendt= '';
+           localStorage.setItem("token", tokendt);
+         
+
+　　　　//トークンチェック(終わり)
+
+
+
+
+
+
         window.app = (function() {
             // State
             let events = JSON.parse(localStorage.getItem('sched_events_v3')) || {};
