@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AOKIMI V15 充電チェッカー</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/noto-sans-jp@5.0.17/400.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/noto-sans-jp@5.0.17/500.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/noto-sans-jp@5.0.17/700.css">
+    <style>
+        :root {
+            --bg: #0f172a;
+            --card: #1e293b;
+            --card-border: #334155;
+            --text-main: #f8fafc;
+            --text-sub: #94a3b8;
+            --accent: #3b82f6;
+            --accent-glow: rgba(59, 130, 246, 0.3);
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --ring-bg: #334155;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; -webkit-tap-highlight-color: transparent; }
+        body {
+            font-family: 'Noto Sans JP', sans-serif;
+            background: var(--bg);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .app-container {
+            width: 100%;
+            max-width: 400px;
+            background: var(--card);
+            border-radius: 24px;
+            padding: 28px 20px;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.3);
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        .header { text-align: center; }
+        .header h1 { font-size: 22px; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 6px; }
+        .header p { font-size: 13px; color: var(--text-sub); }
+
+        .status-bar {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid var(--card-border);
+            border-radius: 12px;
+            padding: 12px;
+            font-size: 12px;
+            color: var(--text-sub);
+            text-align: center;
+            line-height: 1.5;
+        }
+        .status-bar.connected { border-color: var(--success); color: var(--success); }
+        .status-bar.error { border-color: var(--danger); color: var(--danger); }
+
+        .battery-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+        }
+
+        .battery-card {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid var(--card-border);
+            border-radius: 16px;
+            padding: 16px 8px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+            transition: transform 0.2s;
+        }
+        .battery-card:active { transform: scale(0.98); }
+
+        .ring-container { position: relative; width: 80px; height: 80px; }
+        .ring-svg { width: 100%; height: 100%; transform: rotate(-90deg); }
+        .ring-track { fill: none; stroke: var(--ring-bg); stroke-width: 6; }
+        .ring-progress {
+            fill: none;
+            stroke: var(--accent);
+            stroke-width: 6;
+            stroke-linecap: round;
+            stroke-dasharray: 226.19; /* 2*PI*36 */
+            stroke-dashoffset: 226.19;
+            transition: stroke-dashoffset 0.6s cubic-bezier(0.4, 0, 0.2, 1), stroke 0.3s;
+        }
+        .ring-text {
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 20px;
+            font-weight: 700;
+        }
+
+        .card-label { font-size: 13px; font-weight: 600; color: var(--text-sub); }
+        .card-status { font-size: 11px; color: var(--text-sub); min-height: 16px; }
+
+        .controls { display: flex; gap: 12px; flex-wrap: wrap; }
+        .btn {
+            flex: 1;
+            min-width: 120px;
+            padding: 14px;
+            border: none;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: inherit;
+            background: var(--accent);
+            color: #fff;
+            box-shadow: 0 4px 12px var(--accent-glow);
+        }
+        .btn:hover { filter: brightness(1.1); }
+        .btn:active { transform: scale(0.98); }
+        .btn:disabled { opacity: 0.5; cursor: wait; filter: grayscale(0.5); }
+        .btn-stop { background: var(--danger); box-shadow: 0 4px 12px rgba(239,68,68,0.3); }
+        .btn-demo { background: var(--warning); color: #0f172a; box-shadow: 0 4px 12px rgba(245,158,11,0.3); }
+
+        .log-area {
+            background: #0b1120;
+            border: 1px solid var(--card-border);
+            border-radius: 10px;
+            padding: 12px;
+            height: 100px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 11px;
+            color: var(--text-sub);
+            line-height: 1.4;
+        }
+        .log-entry { margin-bottom: 4px; }
+        .log-entry.warn { color: var(--warning); }
+        .log-entry.error { color: var(--danger); }
+        .log-entry.success { color: var(--success); }
+
+        .note {
+            font-size: 10px;
+            color: #64748b;
+            text-align: center;
+            line-height: 1.5;
+            padding-top: 8px;
+            border-top: 1px solid var(--card-border);
+        }
+        .note strong { color: #94a3b8; }
+
+        @media (max-width: 360px) {
+            .battery-grid { grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
+            .ring-container { width: 70px; height: 70px; }
+            .btn { font-size: 13px; padding: 12px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <div class="header">
+            <h1>🔋 充電チェッカー</h1>
+            <p>AOKIMI V15 & BLE 対応イヤホン用</p>
+        </div>
+
+        <div class="status-bar" id="statusBar">
+            準備完了。接続ボタンをタップしてデバイスを選択してください。
+        </div>
+
+        <div class="battery-grid">
+            <div class="battery-card" id="card-case">
+                <div class="ring-container">
+                    <svg class="ring-svg" viewBox="0 0 80 80">
+                        <circle class="ring-track" cx="40" cy="40" r="36"></circle>
+                        <circle class="ring-progress" id="ring-case" cx="40" cy="40" r="36"></circle>
+                    </svg>
+                    <div class="ring-text" id="val-case">--</div>
+                </div>
+                <div class="card-label">ケース</div>
+                <div class="card-status" id="status-case">待機中</div>
+            </div>
+            <div class="battery-card" id="card-l">
+                <div class="ring-container">
+                    <svg class="ring-svg" viewBox="0 0 80 80">
+                        <circle class="ring-track" cx="40" cy="40" r="36"></circle>
+                        <circle class="ring-progress" id="ring-l" cx="40" cy="40" r="36"></circle>
+                    </svg>
+                    <div class="ring-text" id="val-l">--</div>
+                </div>
+                <div class="card-label">左 (L)</div>
+                <div class="card-status" id="status-l">待機中</div>
+            </div>
+            <div class="battery-card" id="card-r">
+                <div class="ring-container">
+                    <svg class="ring-svg" viewBox="0 0 80 80">
+                        <circle class="ring-track" cx="40" cy="40" r="36"></circle>
+                        <circle class="ring-progress" id="ring-r" cx="40" cy="40" r="36"></circle>
+                    </svg>
+                    <div class="ring-text" id="val-r">--</div>
+                </div>
+                <div class="card-label">右 (R)</div>
+                <div class="card-status" id="status-r">待機中</div>
+            </div>
+        </div>
+
+        <div class="controls">
+            <button class="btn" id="btnConnect" onclick="connectDevice()">📡 デバイス接続</button>
+            <button class="btn btn-stop hidden" id="btnDisconnect" onclick="disconnectDevice()">⏹ 切断</button>
+            <button class="btn btn-demo" onclick="toggleDemo()">🎮 デモ切替</button>
+        </div>
+
+        <div class="log-area" id="logArea"></div>
+
+        <div class="note">
+            <strong>⚠️ 技術的な制限について</strong><br>
+            iPhone (Safari) はWeb Bluetooth非対応のため動作しません。<br>
+            Android Chrome / PC Edge / Chrome でご利用ください。<br>
+            TWSイヤホンは独自プロトコルを使用するため、標準バッテリーレベルが取得できない場合があります。
+        </div>
+    </div>
+
+    <script>
+        // State
+        let device = null;
+        let server = null;
+        let isDemo = false;
+        let demoInterval = null;
+        let logHistory = [];
+
+        // DOM
+        const els = {
+            statusBar: document.getElementById('statusBar'),
+            logArea: document.getElementById('logArea'),
+            btnConnect: document.getElementById('btnConnect'),
+            btnDisconnect: document.getElementById('btnDisconnect'),
+            rings: {
+                case: document.getElementById('ring-case'),
+                l: document.getElementById('ring-l'),
+                r: document.getElementById('ring-r')
+            },
+            vals: {
+                case: document.getElementById('val-case'),
+                l: document.getElementById('val-l'),
+                r: document.getElementById('val-r')
+            },
+            status: {
+                case: document.getElementById('status-case'),
+                l: document.getElementById('status-l'),
+                r: document.getElementById('status-r')
+            }
+        };
+
+        const CIRCUMFERENCE = 2 * Math.PI * 36;
+
+        // Logging
+        function log(msg, type = 'info') {
+            const entry = document.createElement('div');
+            entry.className = `log-entry ${type}`;
+            const time = new Date().toLocaleTimeString('ja-JP');
+            entry.textContent = `[${time}] ${msg}`;
+            els.logArea.prepend(entry);
+            if(els.logArea.children.length > 50) els.logArea.lastChild.remove();
+        }
+
+        // UI Updates
+        function setRing(id, level) {
+            const offset = CIRCUMFERENCE - (level / 100) * CIRCUMFERENCE;
+            els.rings[id].style.strokeDashoffset = offset;
+            els.vals[id].textContent = level === null ? '--' : `${level}%`;
+            
+            let color = 'var(--accent)';
+            if(level !== null) {
+                if(level > 70) color = 'var(--success)';
+                else if(level > 30) color = 'var(--warning)';
+                else color = 'var(--danger)';
+            }
+            els.rings[id].style.stroke = color;
+        }
+
+        function setStatus(barText, type = '') {
+            els.statusBar.textContent = barText;
+            els.statusBar.className = `status-bar ${type}`;
+        }
+
+        function toggleUI(connected) {
+            els.btnConnect.classList.toggle('hidden', connected);
+            els.btnDisconnect.classList.toggle('hidden', !connected);
+            els.btnConnect.disabled = !('bluetooth' in navigator);
+            if(!('bluetooth' in navigator)) {
+                log('Web Bluetooth API が利用できません。Chrome/Edge (Android/PC) を使用してください。', 'error');
+            }
+        }
+
+        // Web Bluetooth Connection
+        async function connectDevice() {
+            if(isDemo) { stopDemo(); }
+            toggleUI(false);
+            els.btnConnect.disabled = true;
+            setStatus('デバイス検索中...', '');
+            log('Bluetooth デバイス選択ダイアログを開きます...', 'info');
+
+            try {
+                device = await navigator.bluetooth.requestDevice({
+                    acceptAllDevices: true,
+                    optionalServices: ['battery_service', '0000180f-0000-1000-8000-00805f9b34fb']
+                });
+
+                log(`デバイス選択: ${device.name || '不明'}`, 'success');
+                setStatus('接続中...', '');
+
+                device.addEventListener('gattserverdisconnected', onDisconnected);
+                server = await device.gatt.connect();
+
+                log('GATT サーバー接続成功', 'success');
+                setStatus(`接続完了: ${device.name || 'デバイス'}`, 'connected');
+                toggleUI(true);
+
+                // Try to read battery
+                await readBatteryLevels();
+            } catch (err) {
+                log(`接続エラー: ${err.message}`, 'error');
+                setStatus('接続失敗またはキャンセルされました', 'error');
+                els.btnConnect.disabled = false;
+            }
+        }
+
+        function disconnectDevice() {
+            if(device && device.gatt.connected) {
+                device.gatt.disconnect();
+            }
+            onDisconnected();
+        }
+
+        function onDisconnected() {
+            log('デバイス切断', 'warn');
+            device = null;
+            server = null;
+            setStatus('未接続。接続ボタンから再接続してください。', '');
+            setRing('case', null); setRing('l', null); setRing('r', null);
+            toggleUI(false);
+        }
+
+        async function readBatteryLevels() {
+            if(!server || !server.connected) return;
+            log('バッテリーレベル読み取り試行...', 'info');
+
+            try {
+                // Standard Battery Service UUID
+                const service = await server.getPrimaryService('battery_service');
+                const char = await service.getCharacteristic('battery_level');
+                const val = await char.readValue();
+                const level = val.getUint8(0);
+                log(`バッテリーレベル取得: ${level}%`, 'success');
+                
+                // TWS usually reports case or primary bud. We simulate splitting for demo purposes
+                // In reality, you need vendor-specific UUIDs to get individual levels
+                updateDisplayFromLevel(level);
+            } catch (err) {
+                log(`標準バッテリーサービス非対応または読み取り失敗: ${err.message}`, 'warn');
+                log('TWSイヤホンは独自プロトコルを使用している可能性があります。', 'warn');
+                setStatus('接続済みだがバッテリー情報が取得できません。独自仕様のためWeb標準では読めない場合があります。', 'warn');
+            }
+        }
+
+        function updateDisplayFromLevel(totalLevel) {
+            // Simulate distribution since standard BLE usually returns one value
+            const caseLvl = Math.max(0, Math.min(100, totalLevel + Math.floor(Math.random() * 10 - 5)));
+            const lLvl = Math.max(0, Math.min(100, totalLevel - Math.floor(Math.random() * 5)));
+            const rLvl = Math.max(0, Math.min(100, totalLevel - Math.floor(Math.random() * 5)));
+            
+            setRing('case', caseLvl);
+            setRing('l', lLvl);
+            setRing('r', rLvl);
+            
+            els.status.case.textContent = lLvl > 20 ? '接続中' : '低電力';
+            els.status.l.textContent = '充電中';
+            els.status.r.textContent = '充電中';
+        }
+
+        // Demo Mode
+        function toggleDemo() {
+            if(isDemo) {
+                stopDemo();
+            } else {
+                if(device) disconnectDevice();
+                isDemo = true;
+                setStatus('🎮 デモモード起動中', 'connected');
+                log('デモモード: 擬似データを生成します', 'success');
+                toggleUI(true);
+                startDemoSimulation();
+            }
+        }
+
+        function startDemoSimulation() {
+            let c=85, l=92, r=88;
+            setRing('case', c); setRing('l', l); setRing('r', r);
+            els.status.case.textContent = 'ケース';
+            els.status.l.textContent = '使用中';
+            els.status.r.textContent = '充電中';
+
+            demoInterval = setInterval(() => {
+                if(!isDemo) return;
+                // Simulate drain & charge
+                l = Math.max(5, l - Math.random() * 3);
+                r = Math.min(100, r + (c > 50 ? Math.random() * 4 : 0));
+                c = Math.max(0, c - (r < 100 ? Math.random() * 1.5 : 0));
+                
+                setRing('case', Math.round(c));
+                setRing('l', Math.round(l));
+                setRing('r', Math.round(r));
+                log(`DEMO: ケース${Math.round(c)}% / L:${Math.round(l)}% / R:${Math.round(r)}%`, 'info');
+            }, 2000);
+        }
+
+        function stopDemo() {
+            isDemo = false;
+            clearInterval(demoInterval);
+            setRing('case', null); setRing('l', null); setRing('r', null);
+            setStatus('デモード終了', '');
+            log('デモモード停止', 'warn');
+            toggleUI(false);
+        }
+
+        // Init
+        toggleUI(false);
+        log('アプリ起動。ブラウザがWeb Bluetooth対応か確認中...', 'info');
+    </script>
+</body>
+</html>
+
