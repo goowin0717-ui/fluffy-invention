@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#f7f7f7">
+<title>簡単リンク</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    background: #f5f6f8; color: #222;
+  }
+  .app { max-width: 680px; margin: 0 auto; padding: 28px 16px 48px; }
+  h1 { text-align: center; margin: 0 0 22px; font-size: 28px; }
+  .card {
+    background: #fff; border-radius: 16px; padding: 18px;
+    box-shadow: 0 4px 18px rgba(0,0,0,.06); margin-bottom: 18px;
+  }
+  .form { display: grid; gap: 10px; }
+  textarea { width: 100%; padding: 13px 14px; border: 1px solid #d8dbe0; border-radius: 10px; font-size: 14px; outline: none; resize: vertical; font-family: inherit; }
+  textarea:focus { border-color: #777; }
+  input {
+    width: 100%; padding: 13px 14px; border: 1px solid #d8dbe0;
+    border-radius: 10px; font-size: 16px; outline: none;
+  }
+  input:focus { border-color: #777; }
+  button {
+    border: 0; border-radius: 10px; padding: 12px 16px;
+    font-size: 15px; cursor: pointer;
+  }
+  .primary { background: #222; color: #fff; }
+  .secondary { background: #eee; color: #222; }
+  .danger { background: #ffe8e8; color: #c62828; }
+  .edit { background: #eee; color: #333; }
+  .links { display: grid; gap: 10px; }
+  .link-row {
+    display: flex; align-items: center; gap: 8px; padding: 12px 14px;
+    border: 1px solid #e5e7eb; border-radius: 12px; background: #fff;
+  }
+  .site-link {
+    flex: 1; color: #222; text-decoration: none; font-weight: 600;
+    padding: 4px 0; word-break: break-word;
+  }
+  .site-link:hover { text-decoration: underline; }
+  .actions { display: flex; gap: 6px; align-items:center; }
+  .move { background:#f3f3f3; color:#333; padding:8px 10px; min-width:42px; }
+  .move:disabled { opacity:.35; cursor:default; }
+  .sort-card { display:none; }
+  .sort-mode .sort-card { display:block; }
+  .sort-mode .move-actions { display:flex; }
+  .move-actions { display:none; gap:4px; }
+  .empty { text-align: center; color: #888; padding: 28px 10px; }
+  .hint { font-size: 13px; color: #777; margin: 8px 2px 0; }
+  .modal-backdrop {
+    display: none; position: fixed; inset: 0; background: rgba(0,0,0,.38);
+    align-items: center; justify-content: center; padding: 16px;
+  }
+  .modal {
+    width: min(100%, 480px); background: #fff; border-radius: 16px; padding: 20px;
+  }
+  .modal h2 { margin: 0 0 14px; font-size: 20px; }
+  .modal-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 14px; }
+  .error { color: #c62828; font-size: 13px; min-height: 18px; }
+</style>
+</head>
+<body>
+<div class="app">
+  <h1>🔗 簡単リンク</h1>
+
+  <div class="card">
+    <div class="form">
+      <input id="siteName" type="text" placeholder="サイト名（例：Google）" maxlength="100">
+      <input id="siteUrl" type="url" placeholder="URL（例：https://www.google.com）">
+      <div id="formError" class="error"></div>
+      <button class="primary" id="addBtn">＋ 登録</button>
+    </div>
+    <div class="hint">登録したリンクはこのブラウザに保存されます。</div>
+  </div>
+
+  <div class="card">
+    <div class="form"><button class="secondary" id="importBtn">📋 一括インポート</button></div>
+    <div class="hint">「サイト名 → TAB → URL」の形式で複数行を貼り付けて、一括登録できます。</div>
+  </div>
+  <div class="card sort-card"><button class="secondary" id="sortBtn">↕ 並び替え</button><div class="hint" id="sortHint">表示順を自由に変更できます。</div></div>
+  <div class="links" id="links"></div>
+</div>
+
+<div class="modal-backdrop" id="importBackdrop">
+  <div class="modal">
+    <h2>📋 リンクを一括インポート</h2>
+    <div class="form">
+      <textarea id="importText" rows="10" placeholder="Google	https://www.google.com/
+Yahoo! JAPAN	https://www.yahoo.co.jp/
+YouTube	https://www.youtube.com/"></textarea>
+      <div id="importError" class="error"></div>
+    </div>
+    <div class="modal-actions">
+      <button class="secondary" id="cancelImport">キャンセル</button>
+      <button class="primary" id="runImport">読み込む</button>
+    </div>
+    <div class="hint">Excelから「サイト名」と「URL」の2列をコピーして、そのまま貼り付けることもできます。</div>
+  </div>
+</div>
+
+<div class="modal-backdrop" id="modalBackdrop">
+  <div class="modal">
+    <h2>リンクを編集</h2>
+    <div class="form">
+      <input id="editName" type="text" maxlength="100">
+      <input id="editUrl" type="url">
+      <div id="editError" class="error"></div>
+    </div>
+    <div class="modal-actions">
+      <button class="secondary" id="cancelEdit">キャンセル</button>
+      <button class="primary" id="saveEdit">保存</button>
+      <button class="danger" id="deleteLink">削除</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const STORAGE_KEY = "kantan-link-items";
+let items = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
+let editingId = null;
+let sortMode = false;
+
+const $ = id => document.getElementById(id);
+
+function save() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
+}
+
+function moveItem(index, direction) {
+  const newIndex = index + direction;
+  if (newIndex < 0 || newIndex >= items.length) return;
+  [items[index], items[newIndex]] = [items[newIndex], items[index]];
+  save();
+  render();
+}
+
+function normalizeUrl(value) {
+  let url = value.trim();
+  if (!/^https?:\/\//i.test(url)) url = "https://" + url;
+  return url;
+}
+
+function validUrl(value) {
+  try {
+    const u = new URL(normalizeUrl(value));
+    return u.protocol === "http:" || u.protocol === "https:";
+  } catch { return false; }
+}
+
+function render() {
+  const root = $("links");
+  root.innerHTML = "";
+  if (!items.length) {
+    root.innerHTML = '<div class="card empty">まだリンクが登録されていません。</div>';
+    return;
+  }
+
+  items.forEach(item => {
+    const row = document.createElement("div");
+    row.className = "link-row";
+
+    const a = document.createElement("a");
+    a.className = "site-link";
+    a.href = item.url;
+    a.target = "_self";
+    a.rel = "noopener";
+    a.textContent = item.name;
+
+    const actions = document.createElement("div");
+    actions.className = "actions";
+
+    const moveActions = document.createElement("div");
+    moveActions.className = "move-actions";
+
+    const index = items.indexOf(item);
+    const up = document.createElement("button");
+    up.className = "move";
+    up.textContent = "↑";
+    up.title = "上へ";
+    up.disabled = index === 0;
+    up.onclick = () => moveItem(index, -1);
+
+    const down = document.createElement("button");
+    down.className = "move";
+    down.textContent = "↓";
+    down.title = "下へ";
+    down.disabled = index === items.length - 1;
+    down.onclick = () => moveItem(index, 1);
+
+    moveActions.appendChild(up);
+    moveActions.appendChild(down);
+
+    const edit = document.createElement("button");
+    edit.className = "edit";
+    edit.textContent = "編集";
+    edit.onclick = () => openEdit(item.id);
+
+    actions.appendChild(moveActions);
+    actions.appendChild(edit);
+    row.appendChild(a);
+    row.appendChild(actions);
+    root.appendChild(row);
+  });
+}
+
+$("sortBtn").onclick = () => {
+  sortMode = !sortMode;
+  document.body.classList.toggle("sort-mode", sortMode);
+  $("sortBtn").textContent = sortMode ? "✓ 並び替えを終了" : "↕ 並び替え";
+  $("sortHint").textContent = sortMode ? "↑↓ボタンで順番を変更できます。変更は自動保存されます。" : "表示順を自由に変更できます。";
+  render();
+};
+
+$("addBtn").onclick = () => {
+  const name = $("siteName").value.trim();
+  const url = $("siteUrl").value.trim();
+  $("formError").textContent = "";
+
+  if (!name) return $("formError").textContent = "サイト名を入力してください。";
+  if (!validUrl(url)) return $("formError").textContent = "正しいURLを入力してください。";
+
+  items.push({ id: Date.now().toString(), name, url: normalizeUrl(url) });
+  save(); render();
+  $("siteName").value = "";
+  $("siteUrl").value = "";
+  $("siteName").focus();
+};
+
+function openEdit(id) {
+  const item = items.find(x => x.id === id);
+  if (!item) return;
+  editingId = id;
+  $("editName").value = item.name;
+  $("editUrl").value = item.url;
+  $("editError").textContent = "";
+  $("modalBackdrop").style.display = "flex";
+  $("editName").focus();
+}
+
+function closeEdit() {
+  editingId = null;
+  $("modalBackdrop").style.display = "none";
+}
+
+$("cancelEdit").onclick = closeEdit;
+
+$("saveEdit").onclick = () => {
+  const item = items.find(x => x.id === editingId);
+  const name = $("editName").value.trim();
+  const url = $("editUrl").value.trim();
+  $("editError").textContent = "";
+
+  if (!item) return closeEdit();
+  if (!name) return $("editError").textContent = "サイト名を入力してください。";
+  if (!validUrl(url)) return $("editError").textContent = "正しいURLを入力してください。";
+
+  item.name = name;
+  item.url = normalizeUrl(url);
+  save(); render(); closeEdit();
+};
+
+$("deleteLink").onclick = () => {
+  if (!editingId) return;
+  if (!confirm("このリンクを削除しますか？")) return;
+  items = items.filter(x => x.id !== editingId);
+  save(); render(); closeEdit();
+};
+
+$("modalBackdrop").onclick = e => {
+  if (e.target === $("modalBackdrop")) closeEdit();
+};
+
+["siteName", "siteUrl"].forEach(id => {
+  $(id).addEventListener("keydown", e => {
+    if (e.key === "Enter") $("addBtn").click();
+  });
+});
+
+$("importBtn").onclick = () => {
+  $("importText").value = "";
+  $("importError").textContent = "";
+  $("importBackdrop").style.display = "flex";
+  $("importText").focus();
+};
+function closeImport() { $("importBackdrop").style.display = "none"; }
+$("cancelImport").onclick = closeImport;
+$("importBackdrop").onclick = e => { if (e.target === $("importBackdrop")) closeImport(); };
+$("runImport").onclick = () => {
+  const text = $("importText").value.trim();
+  $("importError").textContent = "";
+  if (!text) { $("importError").textContent = "インポートするデータを貼り付けてください。"; return; }
+  let added = 0, skipped = 0;
+  text.split(/\r?\n/).forEach(line => {
+    if (!line.trim()) return;
+    let parts = line.split("\t");
+    if (parts.length < 2) parts = line.trim().split(/\s{2,}/);
+    const name = (parts[0] || "").trim();
+    const url = (parts.slice(1).join("\t") || "").trim();
+    if (!name || !url || !validUrl(url)) { skipped++; return; }
+    items.push({ id: Date.now().toString() + Math.random().toString(16).slice(2), name, url: normalizeUrl(url) });
+    added++;
+  });
+  if (!added) { $("importError").textContent = "読み込めるデータがありません。サイト名とURLをTABで区切ってください。"; return; }
+  save(); render(); closeImport();
+  alert(added + "件を登録しました。" + (skipped ? "\n" + skipped + "行は読み込めませんでした。" : ""));
+};
+
+render();
+</script>
+</body>
+</html>
