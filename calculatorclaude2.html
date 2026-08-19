@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>簡単な電卓</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .calculator {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 30px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            width: 100%;
+            max-width: 350px;
+        }
+
+        .display {
+            background: rgba(0, 0, 0, 0.8);
+            color: #fff;
+            font-size: 2.5em;
+            padding: 20px;
+            text-align: right;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            min-height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            word-break: break-all;
+            overflow-wrap: break-word;
+            box-shadow: inset 0 2px 10px rgba(0, 0, 0, 0.5);
+        }
+
+        .buttons {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+        }
+
+        .btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            border-radius: 15px;
+            color: #fff;
+            font-size: 1.4em;
+            font-weight: 600;
+            padding: 20px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            min-height: 60px;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        .btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+            background: rgba(255, 255, 255, 0.4);
+        }
+
+        .btn.operator {
+            background: rgba(255, 107, 107, 0.8);
+        }
+
+        .btn.operator:hover {
+            background: rgba(255, 107, 107, 0.9);
+        }
+
+        .btn.equals {
+            background: rgba(72, 187, 120, 0.8);
+        }
+
+        .btn.equals:hover {
+            background: rgba(72, 187, 120, 0.9);
+        }
+
+        .btn.clear {
+            background: rgba(237, 137, 54, 0.8);
+        }
+
+        .btn.clear:hover {
+            background: rgba(237, 137, 54, 0.9);
+        }
+
+        .btn.zero {
+            grid-column: span 2;
+        }
+
+        @media (max-width: 400px) {
+            .calculator { padding: 20px; }
+            .display { font-size: 2em; padding: 15px; min-height: 50px; }
+            .btn { font-size: 1.2em; padding: 15px; min-height: 50px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="calculator">
+        <div class="display" id="display">0</div>
+        <div class="buttons">
+            <button class="btn clear"    data-action="clear">C</button>
+            <button class="btn clear"    data-action="ce">CE</button>
+            <button class="btn operator" data-action="delete">⌫</button>
+            <button class="btn operator" data-op="/">÷</button>
+
+            <button class="btn" data-num="7">7</button>
+            <button class="btn" data-num="8">8</button>
+            <button class="btn" data-num="9">9</button>
+            <button class="btn operator" data-op="*">×</button>
+
+            <button class="btn" data-num="4">4</button>
+            <button class="btn" data-num="5">5</button>
+            <button class="btn" data-num="6">6</button>
+            <button class="btn operator" data-op="-">-</button>
+
+            <button class="btn" data-num="1">1</button>
+            <button class="btn" data-num="2">2</button>
+            <button class="btn" data-num="3">3</button>
+            <button class="btn operator" data-op="+">+</button>
+
+            <button class="btn zero"   data-num="0">0</button>
+            <button class="btn"        data-action="decimal">.</button>
+            <button class="btn equals" data-action="equals">=</button>
+        </div>
+    </div>
+
+    <script>
+        // ── State ──────────────────────────────────────────────
+        let state = {
+            current:  '',   // 現在入力中の数値文字列
+            previous: '',   // 演算子前の数値文字列
+            op:       '',   // 保留中の演算子
+            newInput: false // 次打鍵で currentを上書きするフラグ
+        };
+
+        // ── Display ────────────────────────────────────────────
+        const display = document.getElementById('display');
+
+        function render(val) {
+            // 必ず文字列として表示し、空なら '0'
+            display.textContent = (val === '' || val == null) ? '0' : String(val);
+        }
+
+        // ── Core logic ─────────────────────────────────────────
+        function inputNumber(n) {
+            if (state.newInput) {
+                state.current  = n;
+                state.newInput = false;
+            } else {
+                // 先頭の余分な '0' を除去（'0.' はそのまま）
+                if (state.current === '0') {
+                    state.current = n;
+                } else {
+                    state.current += n;
+                }
+            }
+            render(state.current);
+        }
+
+        function inputDecimal() {
+            if (state.newInput) {
+                state.current  = '0.';
+                state.newInput = false;
+            } else if (!state.current.includes('.')) {
+                state.current = (state.current === '' ? '0' : state.current) + '.';
+            }
+            render(state.current);
+        }
+
+        function inputOperator(op) {
+            // 入力も前値もない場合は無視
+            if (state.current === '' && state.previous === '') return;
+
+            // 前の演算を先に確定（連続演算）
+            if (state.previous !== '' && state.current !== '' && !state.newInput) {
+                execCalc();
+            }
+
+            state.op       = op;
+            state.previous = state.current !== '' ? state.current : state.previous;
+            state.current  = '';
+            state.newInput = false;
+            render(state.previous);
+        }
+
+        function execCalc() {
+            if (state.previous === '' || state.current === '' || state.op === '') return;
+
+            const a = parseFloat(state.previous);
+            const b = parseFloat(state.current);
+            let result;
+
+            switch (state.op) {
+                case '+': result = a + b; break;
+                case '-': result = a - b; break;
+                case '*': result = a * b; break;
+                case '/':
+                    if (b === 0) { render('エラー'); resetState(); return; }
+                    result = a / b;
+                    break;
+                default: return;
+            }
+
+            // 浮動小数点誤差を丸める
+            result = parseFloat(result.toPrecision(12));
+
+            state.current  = String(result);
+            state.previous = '';
+            state.op       = '';
+            state.newInput = true;
+            render(state.current);
+        }
+
+        function deleteLast() {
+            if (state.newInput) return; // 計算直後は削除不可
+            state.current = state.current.slice(0, -1);
+            render(state.current);
+        }
+
+        function clearEntry() {
+            state.current  = '';
+            state.newInput = false;
+            render('0');
+        }
+
+        function resetState() {
+            state = { current: '', previous: '', op: '', newInput: false };
+        }
+
+        function clearAll() {
+            resetState();
+            render('0');
+        }
+
+        // ── Event delegation（ボタン連打対策） ─────────────────
+        // onclick属性の代わりにイベントデリゲーションで一元管理。
+        // pointerdown を使いつつ、click も併用して確実性を高める。
+        // ただし1イベント1処理になるよう重複実行を防ぐ。
+
+        const buttonsEl = document.querySelector('.buttons');
+        let lastTarget = null;
+
+        function handleButton(btn) {
+            if (!btn || !btn.classList.contains('btn')) return;
+
+            if (btn.dataset.num !== undefined) {
+                inputNumber(btn.dataset.num);
+            } else if (btn.dataset.op !== undefined) {
+                inputOperator(btn.dataset.op);
+            } else {
+                switch (btn.dataset.action) {
+                    case 'clear':   clearAll();   break;
+                    case 'ce':      clearEntry(); break;
+                    case 'delete':  deleteLast(); break;
+                    case 'decimal': inputDecimal(); break;
+                    case 'equals':  execCalc();   break;
+                }
+            }
+        }
+
+        // pointerdown で素早い連打にも即反応
+        buttonsEl.addEventListener('pointerdown', e => {
+            const btn = e.target.closest('.btn');
+            if (!btn) return;
+            e.preventDefault(); // click との二重発火を防止
+            lastTarget = btn;
+            handleButton(btn);
+        });
+
+        // pointerdown で preventDefault した場合 click は発火しないが、
+        // キーボードの Enter/Space によるフォーカスクリックには対応
+        buttonsEl.addEventListener('click', e => {
+            const btn = e.target.closest('.btn');
+            if (!btn || btn === lastTarget) { lastTarget = null; return; }
+            handleButton(btn);
+            lastTarget = null;
+        });
+
+        // ── Keyboard support ───────────────────────────────────
+        document.addEventListener('keydown', e => {
+            if (e.key >= '0' && e.key <= '9') { inputNumber(e.key); return; }
+            switch (e.key) {
+                case '.':        inputDecimal();      break;
+                case '+':        inputOperator('+');  break;
+                case '-':        inputOperator('-');  break;
+                case '*':        inputOperator('*');  break;
+                case '/':        e.preventDefault(); inputOperator('/'); break;
+                case 'Enter':
+                case '=':        e.preventDefault(); execCalc();        break;
+                case 'Escape':   clearAll();          break;
+                case 'Backspace':e.preventDefault(); deleteLast();      break;
+            }
+        });
+    </script>
+</body>
+</html>
